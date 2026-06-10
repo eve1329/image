@@ -38,7 +38,7 @@
 </tr>
 <tr>
 <td width="180" align="center" valign="middle">
-  <a href="https://9527code.com/"><img src="https://9527code.com/logo.png" alt="9527 CODE" width="150"></a>
+  <a href="https://9527code.com/"><img src="https://github.com/user-attachments/assets/37eb2794-191a-4c62-90f4-e103211bb393" alt="9527 CODE" width="150"></a>
 </td>
 <td valign="middle"><b><a href="https://9527code.com/">9527 CODE</a></b>&nbsp;是企业级满血 AI 中转服务平台，专注提供 Claude Code、Codex 等主流模型的高稳定中转能力，为企业级 AI 使用提供稳定、合规、高效的一站式解决方案。</td>
 </tr>

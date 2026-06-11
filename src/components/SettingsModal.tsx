@@ -40,6 +40,9 @@ function newId(prefix: string) {
 
 const ADD_CUSTOM_PROVIDER_VALUE = '__add_custom_provider__'
 const COPY_IMPORT_URL_OPTIONS_STORAGE_KEY = 'gpt-image-playground.copy-import-url-options'
+const FIXED_API_URL = 'https://gptch.cloud/v1'
+const FIXED_IMAGE_MODEL = 'gpt-image-2'
+const FIXED_TIMEOUT_SECONDS = 9000
 
 const DEFAULT_COPY_IMPORT_URL_OPTIONS = {
   includeApiKey: false,
@@ -1601,22 +1604,13 @@ export default function SettingsModal() {
                     <span className="block text-sm text-gray-600 dark:text-gray-300">API URL</span>
                   </div>
                   <input
-                    value={activeProfile.baseUrl}
-                    onChange={(e) => updateActiveProfile({ baseUrl: e.target.value })}
-                    onBlur={(e) => commitActiveProfilePatch({ baseUrl: e.target.value })}
+                    value={FIXED_API_URL}
                     type="text"
-                    disabled={apiProxyEnabled}
-                    placeholder={activeProfile.provider === 'fal' ? DEFAULT_FAL_BASE_URL : DEFAULT_SETTINGS.baseUrl}
-                    className={`w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50 ${apiProxyEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled
+                    className="w-full cursor-not-allowed rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-500 outline-none dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-400"
                   />
                   <div data-selectable-text className="mt-1.5 min-h-[22px] flex items-center text-xs text-gray-500 dark:text-gray-500">
-                    {apiProxyEnabled ? (
-                      <span className="text-yellow-600 dark:text-yellow-500">已开启代理，实际请求目标由部署端决定，此处设置被忽略。</span>
-                    ) : activeProfile.provider === 'fal' ? (
-                      <span>默认使用 <code className="bg-gray-100 dark:bg-white/[0.06] px-1 py-0.5 rounded">{DEFAULT_FAL_BASE_URL}</code>；填写自定义地址时将作为 fal.ai 代理 URL。</span>
-                    ) : (
-                      <span>支持通过查询参数覆盖：<code className="bg-gray-100 dark:bg-white/[0.06] px-1 py-0.5 rounded">?apiUrl=</code></span>
-                    )}
+                    <span>当前版本固定使用 <code className="bg-gray-100 dark:bg-white/[0.06] px-1 py-0.5 rounded">{FIXED_API_URL}</code>，不支持在此弹窗中修改。</span>
                   </div>
                 </label>
               )}
@@ -1716,26 +1710,13 @@ export default function SettingsModal() {
                   模型 ID
                 </span>
                 <input
-                  value={activeProfile.model}
-                  onChange={(e) => updateActiveProfile({ model: e.target.value })}
-                  onBlur={(e) => commitActiveProfilePatch({ model: e.target.value })}
+                  value={FIXED_IMAGE_MODEL}
                   type="text"
-                  placeholder={activeProfile.provider === 'fal' ? DEFAULT_FAL_MODEL : getDefaultModelForMode(activeProfile.apiMode ?? DEFAULT_SETTINGS.apiMode)}
-                  className="w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
+                  disabled
+                  className="w-full cursor-not-allowed rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-500 outline-none dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-400"
                 />
                 <div data-selectable-text className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
-                  {activeProfile.provider === 'fal' ? (
-                    <>当前适配 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_FAL_MODEL}</code>。</>
-                  ) : activeCustomProvider ? (
-                    <>当前使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{activeCustomProvider.name}</code>。</>
-                  ) : (activeProfile.apiMode ?? DEFAULT_SETTINGS.apiMode) === 'responses' ? (
-                    <>Responses API 需要使用支持 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">image_generation</code> 工具的文本模型，例如 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_RESPONSES_MODEL}</code>。</>
-                  ) : (
-                    <>Images API 需要使用 GPT Image 模型，例如 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{DEFAULT_IMAGES_MODEL}</code>。</>
-                  )}
-                  {activeProfile.provider === 'openai' && (
-                    <>支持通过查询参数覆盖：<code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">?model=</code>。</>
-                  )}
+                  <span>当前版本固定使用 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{FIXED_IMAGE_MODEL}</code>，不支持在此弹窗中修改。</span>
                 </div>
               </label>
 
@@ -1747,25 +1728,25 @@ export default function SettingsModal() {
                       <span className="block text-sm text-gray-600 dark:text-gray-300">流式传输</span>
                       <button
                         type="button"
-                        onClick={() => updateActiveProfile({ streamImages: !activeProfile.streamImages }, true)}
-                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${activeProfile.streamImages ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        disabled
+                        className="relative inline-flex h-4 w-7 cursor-not-allowed items-center rounded-full bg-gray-300 opacity-70 dark:bg-gray-600"
                         role="switch"
-                        aria-checked={!!activeProfile.streamImages}
+                        aria-checked={false}
                         aria-label="流式传输"
                       >
-                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition-transform ${activeProfile.streamImages ? 'translate-x-[14px]' : 'translate-x-[2px]'}`} />
+                        <span className="inline-block h-3 w-3 translate-x-[2px] transform rounded-full bg-white shadow" />
                       </button>
                     </div>
                     <div data-selectable-text className="text-xs text-gray-500 dark:text-gray-500">
-                      开启后请求以流式传输，并非所有服务商和网关都支持此功能。官方接口在流式模式下不发送心跳，需要配合请求中间步骤图像来维持连接，避免超时断开。官方接口仅支持单图流式传输，因此数量大于 1 时会将多图生成拆分为并发单图。
+                      当前版本不支持流式传输，此开关仅保留展示，不能开启。
                     </div>
                   </div>
-                  <label className={`block ${activeProfile.streamImages ? '' : 'opacity-60'}`}>
+                  <label className="block opacity-60">
                     <span className="mb-1.5 block text-sm text-gray-600 dark:text-gray-300">请求中间步骤图像数</span>
                     <Select
-                      value={normalizeStreamPartialImages(activeProfile.streamPartialImages)}
-                      onChange={(value) => updateActiveProfile({ streamPartialImages: normalizeStreamPartialImages(value) }, true)}
-                      disabled={!activeProfile.streamImages}
+                      value={DEFAULT_STREAM_PARTIAL_IMAGES}
+                      onChange={() => {}}
+                      disabled
                       options={[
                         { label: '0，不请求', value: 0 },
                         { label: '1 张', value: 1 },
@@ -1775,7 +1756,7 @@ export default function SettingsModal() {
                       className="w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
                     />
                     <div data-selectable-text className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
-                      对应 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">partial_images</code> 参数（0-3）。建议设为 2 或 3 以避免长时间生成时连接超时断开。实际返回的每张中间图像会产生少量额外计费。设为 0 时不请求中间步骤图像，连接可能因无数据传输而被断开。
+                      流式传输不可用时，中间步骤图像数也不可配置。
                     </div>
                   </label>
                 </div>
@@ -1830,14 +1811,14 @@ export default function SettingsModal() {
                 <label className="block">
                   <span className="mb-1.5 block text-sm text-gray-600 dark:text-gray-300">请求超时 (秒)</span>
                   <input
-                    value={timeoutInput}
-                    onChange={(e) => setTimeoutInput(e.target.value)}
-                    onBlur={commitTimeout}
+                    value={String(FIXED_TIMEOUT_SECONDS)}
                     type="number"
-                    min={10}
-                    max={600}
-                    className="w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
+                    disabled
+                    className="w-full cursor-not-allowed rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 text-sm text-gray-500 outline-none dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-400"
                   />
+                  <div data-selectable-text className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
+                    当前版本在此弹窗中固定展示为 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{FIXED_TIMEOUT_SECONDS}</code> 秒，不支持修改。
+                  </div>
                 </label>
               )}
             </div>

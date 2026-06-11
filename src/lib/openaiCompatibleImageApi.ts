@@ -24,6 +24,60 @@ function getStreamPartialImages(profile: ApiProfile): number {
   return profile.streamPartialImages ?? DEFAULT_STREAM_PARTIAL_IMAGES
 }
 
+// Grok参数转换适配器
+function convertParamsForGrok(params: Record<string, unknown>, profile: ApiProfile): Record<string, unknown> {
+  // 只对Grok provider进行转换（通过baseUrl或provider字段识别）
+  const isGrok = profile.provider === 'grok' ||
+                 profile.provider === 'xai' ||
+                 profile.baseUrl.includes('api.x.ai')
+
+  if (!isGrok) return params
+
+  const converted = { ...params }
+
+  // 转换 size 为 aspect_ratio
+  if (params.size && typeof params.size === 'string') {
+    const aspectRatioMap: Record<string, string> = {
+      '1024x1024': '1:1',
+      '1024x1792': '9:16',
+      '1792x1024': '16:9',
+      '2160x3840': '9:16',
+      '3840x2160': '16:9',
+    }
+    const aspectRatio = aspectRatioMap[params.size]
+    if (aspectRatio) {
+      converted.aspect_ratio = aspectRatio
+      delete converted.size
+      console.log(`[Grok适配] size "${params.size}" -> aspect_ratio "${aspectRatio}"`)
+    }
+  }
+
+  // 转换 quality 为 resolution
+  if (params.quality && typeof params.quality === 'string') {
+    const resolutionMap: Record<string, string> = {
+      'auto': '1k',
+      'standard': '1k',
+      'hd': '2k',
+    }
+    const resolution = resolutionMap[params.quality]
+    if (resolution) {
+      converted.resolution = resolution
+      delete converted.quality
+      console.log(`[Grok适配] quality "${params.quality}" -> resolution "${resolution}"`)
+    }
+  }
+
+  // 移除Grok不支持的参数
+  delete converted.moderation
+  delete converted.output_format
+  delete converted.output_compression
+
+  console.log('[Grok适配] 转换前参数:', params)
+  console.log('[Grok适配] 转换后参数:', converted)
+
+  return converted
+}
+
 function appendQuery(path: string, query?: Record<string, string>): string {
   if (!query || !Object.keys(query).length) return path
   const params = new URLSearchParams()
@@ -468,6 +522,7 @@ async function parseResponsesApiStreamResponse(
   }
 }
 
+
 export async function callOpenAICompatibleImageApi(opts: CallApiOptions, profile: ApiProfile, customProvider?: CustomProviderDefinition | null): Promise<CallApiResult> {
   if (customProvider) {
     return callCustomHttpImageApi(opts, profile, customProvider)
@@ -550,30 +605,45 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile, cu
     let response: Response
 
     if (isEdit) {
-      const formData = new FormData()
-      formData.append('model', profile.model)
-      formData.append('prompt', prompt)
-      formData.append('size', params.size)
-      formData.append('output_format', params.output_format)
-      formData.append('moderation', params.moderation)
+      // 准备原始参数
+      const rawParams: Record<string, unknown> = {
+        model: profile.model,
+        prompt,
+        size: params.size,
+        output_format: params.output_format,
+        moderation: params.moderation,
+      }
 
       if (!profile.codexCli) {
-        formData.append('quality', params.quality)
+        rawParams.quality = params.quality
       }
 
       if (params.output_format !== 'png' && params.output_compression != null) {
-        formData.append('output_compression', String(params.output_compression))
+        rawParams.output_compression = params.output_compression
       }
       if (params.n > 1) {
-        formData.append('n', String(params.n))
+        rawParams.n = params.n
       }
       if (profile.responseFormatB64Json) {
-        formData.append('response_format', 'b64_json')
+        rawParams.response_format = 'b64_json'
       }
       if (profile.streamImages) {
-        formData.append('stream', 'true')
-        formData.append('partial_images', String(getStreamPartialImages(profile)))
+        rawParams.stream = true
+        rawParams.partial_images = getStreamPartialImages(profile)
       }
+
+      // 应用Grok参数转换
+      const convertedParams = convertParamsForGrok(rawParams, profile)
+      console.log(`[调试] 图生图模式 - model值: "${profile.model}"`)
+      console.log('[调试] 图生图模式 - 转换后参数:', convertedParams)
+
+      // 构造FormData
+      const formData = new FormData()
+      Object.entries(convertedParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, String(value))
+        }
+      })
 
       const imageBlobs: Blob[] = []
       for (let i = 0; i < inputImageDataUrls.length; i++) {
@@ -611,7 +681,8 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile, cu
         signal: controller.signal,
       })
     } else {
-      const body: Record<string, unknown> = {
+      // 准备原始参数
+      const rawParams: Record<string, unknown> = {
         model: profile.model,
         prompt,
         size: params.size,
@@ -620,22 +691,27 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile, cu
       }
 
       if (!profile.codexCli) {
-        body.quality = params.quality
+        rawParams.quality = params.quality
       }
 
       if (params.output_format !== 'png' && params.output_compression != null) {
-        body.output_compression = params.output_compression
+        rawParams.output_compression = params.output_compression
       }
       if (params.n > 1) {
-        body.n = params.n
+        rawParams.n = params.n
       }
       if (profile.responseFormatB64Json) {
-        body.response_format = 'b64_json'
+        rawParams.response_format = 'b64_json'
       }
       if (profile.streamImages) {
-        body.stream = true
-        body.partial_images = getStreamPartialImages(profile)
+        rawParams.stream = true
+        rawParams.partial_images = getStreamPartialImages(profile)
       }
+
+      // 应用Grok参数转换
+      const body = convertParamsForGrok(rawParams, profile)
+      console.log(`[调试] 文生图模式 - model值: "${profile.model}"`)
+      console.log('[调试] 文生图模式 - 转换后参数:', body)
 
       response = await fetch(buildApiUrl(profile.baseUrl, paths.generationPath, proxyConfig, useApiProxy), {
         method: 'POST',

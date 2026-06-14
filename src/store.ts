@@ -4809,8 +4809,26 @@ async function recoverCustomTask(taskId: string) {
 
   const profile = getCustomRecoveryProfile(settings, task)
   const customProvider = task.apiProvider ? getCustomProviderDefinition(settings, task.apiProvider) : null
-  if (!profile || !customProvider?.poll) {
-    scheduleCustomRecovery(taskId)
+  if (!profile) {
+    clearCustomRecoveryTimer(taskId)
+    updateTaskInStore(taskId, {
+      status: 'error',
+      error: '找不到此任务所使用的 API 配置。',
+      customRecoverable: false,
+      finishedAt: task.finishedAt ?? Date.now(),
+      elapsed: task.elapsed ?? Math.max(0, Date.now() - task.createdAt),
+    })
+    return
+  }
+  if (!customProvider?.poll) {
+    clearCustomRecoveryTimer(taskId)
+    updateTaskInStore(taskId, {
+      status: 'error',
+      error: '当前服务商配置已不支持恢复该异步任务。',
+      customRecoverable: false,
+      finishedAt: task.finishedAt ?? Date.now(),
+      elapsed: task.elapsed ?? Math.max(0, Date.now() - task.createdAt),
+    })
     return
   }
 

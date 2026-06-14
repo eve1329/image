@@ -84,6 +84,14 @@ vi.mock('./lib/falAiImageApi', () => ({
     revisedPrompts: [],
   })),
 }))
+vi.mock('./lib/openaiCompatibleImageApi', () => ({
+  getCustomQueuedImageResult: vi.fn(async () => ({
+    images: [],
+    actualParams: {},
+    actualParamsList: [],
+    revisedPrompts: [],
+  })),
+}))
 vi.mock('./lib/transparentImage', () => ({
   GREEN_KEY_COLOR: '#00FF00',
   MAGENTA_KEY_COLOR: '#FF00FF',
@@ -122,6 +130,7 @@ vi.mock('./lib/agentApi', () => ({
 import { clearAgentConversations, clearImages, clearTasks, getAllAgentConversations, getAllTasks, getImage, putAgentConversation, putImage, putTask as putDbTask } from './lib/db'
 import { callAgentResponsesApi, callBatchImageSingle } from './lib/agentApi'
 import { getFalQueuedImageResult } from './lib/falAiImageApi'
+import { getCustomQueuedImageResult } from './lib/openaiCompatibleImageApi'
 import { removeKeyedBackgroundFromDataUrl } from './lib/transparentImage'
 import { cleanStaleAgentInputDrafts, clearFailedTasks, deleteAgentRoundFromConversation, deleteFavoriteCollection, editOutputs, getActiveAgentRounds, getErrorToastMessage, getPersistedState, getTaskApiProfile, importData, initStore, markInterruptedOpenAIRunningTasks, migratePersistedState, regenerateAgentAssistantMessage, remapAgentRoundMentionsForPathChange, removeTask, reuseConfig, submitAgentMessage, submitTask, taskMatchesFilterStatus, taskMatchesSearchQuery, useStore } from './store'
 
@@ -728,6 +737,56 @@ describe('fal task recovery', () => {
     const originalImage = await getImage(recovered!.transparentOriginalImages![0])
     expect(outputImage?.dataUrl).toBe('transparent:data:image/png;base64,fal-recovered')
     expect(originalImage?.dataUrl).toBe('data:image/png;base64,fal-recovered')
+  })
+})
+
+describe('custom async task recovery', () => {
+  beforeEach(async () => {
+    await clearTasks()
+    await clearImages()
+    vi.mocked(getCustomQueuedImageResult).mockClear()
+    useStore.setState({
+      settings: normalizeSettings({
+        ...DEFAULT_SETTINGS,
+        profiles: [],
+        activeProfileId: DEFAULT_SETTINGS.activeProfileId,
+      }),
+      tasks: [],
+      inputImages: [],
+      galleryInputDraft: null,
+      agentConversations: [],
+      showToast: vi.fn(),
+    })
+  })
+
+  it('marks persisted custom async tasks as failed when the original API profile is missing after restart', async () => {
+    const customAsyncTask = task({
+      id: 'custom-async-missing-profile',
+      apiProvider: 'openai-deployment-async',
+      apiProfileId: 'deleted-profile',
+      apiProfileName: '已删除配置',
+      apiModel: 'gpt-image-2',
+      customTaskId: 'task-1',
+      customRecoverable: true,
+      status: 'error',
+      error: '与自定义异步任务的连接已断开，之后会继续查询任务结果。',
+      createdAt: 2_000,
+      finishedAt: 3_000,
+      elapsed: 1_000,
+    })
+    await putDbTask(customAsyncTask)
+
+    await initStore()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(getCustomQueuedImageResult).not.toHaveBeenCalled()
+    const recovered = useStore.getState().tasks.find((item) => item.id === customAsyncTask.id)
+    expect(recovered).toMatchObject({
+      id: customAsyncTask.id,
+      status: 'error',
+      customRecoverable: false,
+      error: '找不到此任务所使用的 API 配置。',
+    })
   })
 })
 

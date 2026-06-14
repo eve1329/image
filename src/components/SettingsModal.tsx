@@ -14,7 +14,9 @@ import {
   findEquivalentApiProfile,
   getApiProviderLabel,
   getActiveApiProfile,
+  getCustomProviderDefinition,
   importCustomProviderSettingsFromJson,
+  isOpenAIFamilyProvider,
   isOpenAICompatibleProvider,
   mergeImportedSettings,
   normalizeAgentMaxToolRounds,
@@ -203,7 +205,7 @@ function isAsyncCustomProvider(provider: CustomProviderDefinition | null | undef
 
 function isProfileApiProxyEligible(settings: AppSettings, profile: ApiProfile) {
   if (!isOpenAICompatibleProvider(settings, profile.provider)) return false
-  const customProvider = settings.customProviders.find((provider) => provider.id === profile.provider)
+  const customProvider = getCustomProviderDefinition(settings, profile.provider)
   return !isAsyncCustomProvider(customProvider)
 }
 
@@ -361,7 +363,7 @@ export default function SettingsModal() {
   const activeProfile = draft.profiles.find((profile) => profile.id === draft.activeProfileId) ?? draft.profiles[0] ?? getActiveApiProfile(draft)
   const activeProviderIsOpenAICompatible = isOpenAICompatibleProvider(draft, activeProfile.provider)
   const activeProviderUsesApiUrl = activeProviderIsOpenAICompatible || activeProfile.provider === 'fal'
-  const activeCustomProvider = draft.customProviders.find((provider) => provider.id === activeProfile.provider)
+  const activeCustomProvider = getCustomProviderDefinition(draft, activeProfile.provider)
   const activeProfileApiProxyEligible = isProfileApiProxyEligible(draft, activeProfile)
   const activeCustomProviderAsync = isAsyncCustomProvider(activeCustomProvider)
   const apiProxyChecked = activeProfileApiProxyEligible && (apiProxyLocked || activeProfile.apiProxy)
@@ -569,7 +571,7 @@ export default function SettingsModal() {
     url.search = ''
     url.hash = ''
 
-    if (profile.provider === 'openai') {
+    if (isOpenAIFamilyProvider(profile.provider)) {
       const baseUrl = profile.baseUrl.trim() || DEFAULT_SETTINGS.baseUrl
       url.searchParams.set('apiUrl', options.useNewApiAddress && !options.includeApiKey ? '{address}' : normalizeBaseUrl(baseUrl))
       if (options.includeApiKey && profile.apiKey.trim()) {
@@ -771,7 +773,7 @@ export default function SettingsModal() {
     setDuplicateProfileTooltipVisible(false)
     const profile: ApiProfile = {
       ...activeProfile,
-      id: newId(activeProfile.provider === 'openai' ? 'openai' : 'profile'),
+      id: newId(isOpenAIFamilyProvider(activeProfile.provider) ? 'openai' : 'profile'),
       name: `${activeProfile.name}（复制）`,
     }
     const nextDraft = normalizeSettings({

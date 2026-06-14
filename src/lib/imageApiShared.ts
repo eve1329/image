@@ -36,12 +36,30 @@ export interface CallApiResult {
   failedRequests?: Array<{ requestIndex: number; error: string }>
 }
 
+export interface ImageFetchAuthContext {
+  profileBaseUrl?: string
+  apiKey?: string
+}
+
+export interface FetchImageUrlAsDataUrlOptions {
+  signal?: AbortSignal
+  authContext?: ImageFetchAuthContext
+}
+
 export function isHttpUrl(value: unknown): value is string {
   return typeof value === 'string' && /^https?:\/\//i.test(value)
 }
 
 export function isDataUrl(value: unknown): value is string {
   return typeof value === 'string' && value.startsWith('data:')
+}
+
+export function isRelativeFetchUrl(value: unknown): value is string {
+  return typeof value === 'string' && /^(?:\/(?!\/)|\.{1,2}\/)/.test(value)
+}
+
+export function isFetchableImageUrl(value: unknown): value is string {
+  return isHttpUrl(value) || isRelativeFetchUrl(value)
 }
 
 export function normalizeBase64Image(value: string, fallbackMime: string): string {
@@ -134,14 +152,40 @@ async function probeNoCorsReachability(url: string, timeoutMs = 8000): Promise<'
   }
 }
 
-export async function fetchImageUrlAsDataUrl(url: string, fallbackMime: string, signal?: AbortSignal): Promise<string> {
+function getUrlResolutionBase(profileBaseUrl?: string): string {
+  if (typeof window !== 'undefined' && typeof window.location?.href === 'string') {
+    return window.location.href
+  }
+  return profileBaseUrl?.trim() || 'http://localhost'
+}
+
+function getProtectedImageAuthHeaders(url: string, authContext?: ImageFetchAuthContext): Record<string, string> | undefined {
+  if (!authContext?.apiKey?.trim() || !authContext.profileBaseUrl?.trim()) return undefined
+
+  try {
+    const resolutionBase = getUrlResolutionBase(authContext.profileBaseUrl)
+    const requestUrl = new URL(url, resolutionBase)
+    const profileUrl = new URL(authContext.profileBaseUrl, resolutionBase)
+    if (requestUrl.origin !== profileUrl.origin) return undefined
+    if (!/^\/v1\/images\/tasks\/[^/]+\/content\/\d+(?:\/)?$/.test(requestUrl.pathname)) return undefined
+    return {
+      Authorization: `Bearer ${authContext.apiKey.trim()}`,
+    }
+  } catch {
+    return undefined
+  }
+}
+
+export async function fetchImageUrlAsDataUrl(url: string, fallbackMime: string, options: FetchImageUrlAsDataUrlOptions = {}): Promise<string> {
   if (isDataUrl(url)) return url
 
+  const headers = getProtectedImageAuthHeaders(url, options.authContext)
   let response: Response
   try {
     response = await fetch(url, {
       cache: 'no-store',
-      signal,
+      headers,
+      signal: options.signal,
     })
   } catch (err) {
     if (err instanceof TypeError) {

@@ -18,7 +18,11 @@ import { shouldUseApiProxy } from './devProxy'
 import { readRuntimeEnv } from './runtimeEnv'
 import { isImportableConfigUrl } from './customProviderConfigUrl'
 
+export { DEFAULT_STREAM_PARTIAL_IMAGES } from '../types'
+
 const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
+const DEPLOYMENT_DEFAULT_BASE_URL = 'https://gptch.cloud/v1'
+const DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID = 'openai-deployment-async'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'
 const DOCKER_DEPLOYMENT = readRuntimeEnv(import.meta.env.VITE_DOCKER_DEPLOYMENT) === 'true'
@@ -32,7 +36,7 @@ export const DEFAULT_FAL_MODEL = 'openai/gpt-image-2'
 export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
 export const DEFAULT_API_TIMEOUT = 600
 
-const BUILT_IN_PROVIDER_IDS = new Set<ApiProvider>(['openai', 'fal'])
+const BUILT_IN_PROVIDER_IDS = new Set<ApiProvider>(['openai', 'fal', DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID])
 const DEFAULT_CUSTOM_PROVIDER_PATHS = {
   generationPath: 'images/generations',
   editPath: 'images/edits',
@@ -57,8 +61,55 @@ const DEFAULT_EDIT_FILES: CustomProviderFileMapping[] = [
   { field: 'image[]', source: 'inputImages', array: true },
   { field: 'mask', source: 'mask' },
 ]
+const BUILT_IN_CUSTOM_PROVIDER_DEFINITIONS: Record<string, CustomProviderDefinition> = {
+  [DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID]: {
+    id: DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID,
+    name: 'OpenAI',
+    template: 'http-image',
+    submit: {
+      path: 'images/generations/async',
+      method: 'POST',
+      contentType: 'json',
+      body: DEFAULT_GENERATE_BODY,
+      taskIdPath: 'data.task_id',
+      result: DEFAULT_OPENAI_RESULT,
+    },
+    editSubmit: {
+      path: 'images/edits',
+      method: 'POST',
+      contentType: 'multipart',
+      body: DEFAULT_EDIT_BODY,
+      files: DEFAULT_EDIT_FILES,
+      result: DEFAULT_OPENAI_RESULT,
+    },
+    poll: {
+      path: 'images/tasks/{task_id}',
+      method: 'GET',
+      statusPath: 'data.status',
+      successValues: ['SUCCESS'],
+      failureValues: ['FAILURE'],
+      errorPath: 'data.fail_reason',
+      result: {
+        imageUrlPaths: ['data.result.data.*.url'],
+        b64JsonPaths: ['data.result.data.*.b64_json'],
+      },
+    },
+  },
+}
 
 type ApiProfileProviderDraft = NonNullable<ApiProfile['providerDrafts']>[ApiProvider]
+
+export function isDeploymentAsyncOpenAIProvider(provider: ApiProvider): boolean {
+  return provider === DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID
+}
+
+export function isOpenAIFamilyProvider(provider: ApiProvider): boolean {
+  return provider === 'openai' || isDeploymentAsyncOpenAIProvider(provider)
+}
+
+function shouldUseDeploymentAsyncDefaultProvider(apiMode: ApiMode): boolean {
+  return apiMode === 'images' && DEFAULT_BASE_URL === DEPLOYMENT_DEFAULT_BASE_URL
+}
 
 function getDefaultStreamImages(provider: ApiProvider, apiMode: ApiMode): boolean {
   return provider === 'openai' && apiMode === 'responses'
@@ -294,12 +345,13 @@ export function normalizeCustomProviderDefinitions(input: unknown): CustomProvid
 
 export function createDefaultOpenAIProfile(overrides: Partial<ApiProfile> = {}): ApiProfile {
   const apiMode = overrides.apiMode ?? 'images'
-  const streamImages = overrides.streamImages ?? getDefaultStreamImages('openai', apiMode)
+  const provider = overrides.provider ?? (shouldUseDeploymentAsyncDefaultProvider(apiMode) ? DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID : 'openai')
+  const streamImages = overrides.streamImages ?? getDefaultStreamImages(provider, apiMode)
 
   return {
     id: DEFAULT_OPENAI_PROFILE_ID,
     name: '默认',
-    provider: 'openai',
+    provider,
     baseUrl: DEFAULT_BASE_URL,
     apiKey: '',
     model: DEFAULT_IMAGES_MODEL,
@@ -405,11 +457,11 @@ export function switchApiProfileProvider(profile: ApiProfile, provider: ApiProvi
 
 function normalizeProviderDraft(input: unknown, provider: ApiProvider, customProviderIds: Set<string>): ApiProfileProviderDraft {
   if (!isRecord(input)) return undefined
-  const fallback = provider === 'fal' ? createDefaultFalProfile() : createDefaultOpenAIProfile()
+  const fallback = provider === 'fal' ? createDefaultFalProfile() : createDefaultOpenAIProfile({ provider })
   const baseUrl = typeof input.baseUrl === 'string' ? input.baseUrl : undefined
   const model = typeof input.model === 'string' && input.model.trim() ? input.model : undefined
   const apiMode = input.apiMode === 'responses' ? 'responses' : input.apiMode === 'images' ? 'images' : undefined
-  const knownProvider = provider === 'fal' || provider === 'openai' || customProviderIds.has(provider)
+  const knownProvider = BUILT_IN_PROVIDER_IDS.has(provider) || customProviderIds.has(provider)
   if (!knownProvider) return undefined
 
   return {
@@ -438,11 +490,11 @@ function normalizeProviderDrafts(input: unknown, customProviderIds: Set<string>)
 export function normalizeApiProfile(input: unknown, fallback?: Partial<ApiProfile>, customProviderIds = new Set<string>()): ApiProfile {
   const record = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const rawProvider = typeof record.provider === 'string' ? record.provider : ''
-  const provider: ApiProvider = rawProvider === 'fal' || customProviderIds.has(rawProvider) ? rawProvider : 'openai'
+  const provider: ApiProvider = BUILT_IN_PROVIDER_IDS.has(rawProvider) || customProviderIds.has(rawProvider) ? rawProvider : 'openai'
   const apiMode: ApiMode = provider === 'openai' && record.apiMode === 'responses' ? 'responses' : 'images'
   const defaults = provider === 'fal'
     ? createDefaultFalProfile(fallback)
-    : createDefaultOpenAIProfile({ ...fallback, apiMode })
+    : createDefaultOpenAIProfile({ ...fallback, provider, apiMode })
   const rawBaseUrl = typeof record.baseUrl === 'string' ? record.baseUrl : defaults.baseUrl
   const streamImages = provider === 'openai'
     ? typeof record.streamImages === 'boolean' ? record.streamImages : defaults.streamImages
@@ -464,6 +516,38 @@ export function normalizeApiProfile(input: unknown, fallback?: Partial<ApiProfil
     streamImages,
     streamPartialImages: normalizeStreamPartialImages(record.streamPartialImages, defaults.streamPartialImages),
     providerDrafts: normalizeProviderDrafts(record.providerDrafts, customProviderIds),
+  }
+}
+
+function normalizeBaseUrlForComparison(value: string): string {
+  return value.trim().replace(/\/+$/, '')
+}
+
+function shouldMigrateProfileToDeploymentAsyncProvider(profile: ApiProfile): boolean {
+  return shouldUseDeploymentAsyncDefaultProvider('images') &&
+    profile.id === DEFAULT_OPENAI_PROFILE_ID &&
+    profile.name === '默认' &&
+    profile.provider === 'openai' &&
+    normalizeBaseUrlForComparison(profile.baseUrl) === normalizeBaseUrlForComparison(DEPLOYMENT_DEFAULT_BASE_URL) &&
+    profile.model === DEFAULT_IMAGES_MODEL &&
+    profile.apiMode === 'images' &&
+    profile.codexCli === false &&
+    profile.apiProxy === DEFAULT_OPENAI_API_PROXY &&
+    profile.responseFormatB64Json !== true &&
+    profile.streamImages === false &&
+    normalizeStreamPartialImages(profile.streamPartialImages) === DEFAULT_STREAM_PARTIAL_IMAGES
+}
+
+function migrateProfileToDeploymentAsyncProvider(profile: ApiProfile): ApiProfile {
+  if (!shouldMigrateProfileToDeploymentAsyncProvider(profile)) return profile
+
+  return {
+    ...profile,
+    provider: DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID,
+    apiMode: 'images',
+    codexCli: false,
+    streamImages: false,
+    streamPartialImages: normalizeStreamPartialImages(profile.streamPartialImages),
   }
 }
 
@@ -497,9 +581,10 @@ export function normalizeSettings(input: Partial<AppSettings> | unknown): AppSet
     streamImages: typeof record.streamImages === 'boolean' ? record.streamImages : undefined,
     streamPartialImages: normalizeStreamPartialImages(record.streamPartialImages),
   })
-  const profiles = Array.isArray(record.profiles) && record.profiles.length
+  const profiles = (Array.isArray(record.profiles) && record.profiles.length
     ? record.profiles.map((profile) => normalizeApiProfile(profile, undefined, customProviderIds))
-    : [legacyProfile]
+    : [legacyProfile])
+    .map((profile) => migrateProfileToDeploymentAsyncProvider(profile))
   const activeProfileId = typeof record.activeProfileId === 'string' && profiles.some((p) => p.id === record.activeProfileId)
     ? record.activeProfileId
     : profiles[0].id
@@ -535,18 +620,20 @@ export function normalizeSettings(input: Partial<AppSettings> | unknown): AppSet
 }
 
 export function getCustomProviderDefinition(settings: Partial<AppSettings> | unknown, provider: ApiProvider): CustomProviderDefinition | null {
+  const builtInProvider = BUILT_IN_CUSTOM_PROVIDER_DEFINITIONS[provider]
+  if (builtInProvider) return builtInProvider
   const normalized = normalizeSettings(settings)
   return normalized.customProviders.find((item) => item.id === provider) ?? null
 }
 
 export function getApiProviderLabel(settings: Partial<AppSettings> | unknown, provider: ApiProvider): string {
   if (provider === 'fal') return 'fal.ai'
-  if (provider === 'openai') return 'OpenAI'
+  if (isOpenAIFamilyProvider(provider)) return 'OpenAI'
   return getCustomProviderDefinition(settings, provider)?.name ?? provider
 }
 
 export function isOpenAICompatibleProvider(settings: Partial<AppSettings> | unknown, provider: ApiProvider): boolean {
-  return provider === 'openai' || Boolean(getCustomProviderDefinition(settings, provider))
+  return isOpenAIFamilyProvider(provider) || Boolean(getCustomProviderDefinition(settings, provider))
 }
 
 export interface ImportedProviderSettings {
@@ -640,16 +727,17 @@ export function validateApiProfile(profile: ApiProfile): string | null {
 }
 
 function isDefaultOpenAIProfile(profile: ApiProfile): boolean {
+  const defaultProfile = createDefaultOpenAIProfile({ id: profile.id, name: '默认' })
   return profile.id === DEFAULT_OPENAI_PROFILE_ID &&
     profile.name === '默认' &&
-    profile.provider === 'openai' &&
-    profile.baseUrl === DEFAULT_BASE_URL &&
+    profile.provider === defaultProfile.provider &&
+    profile.baseUrl === defaultProfile.baseUrl &&
     profile.apiKey === '' &&
-    profile.model === DEFAULT_IMAGES_MODEL &&
-    profile.timeout === DEFAULT_API_TIMEOUT &&
-    profile.apiMode === 'images' &&
+    profile.model === defaultProfile.model &&
+    profile.timeout === defaultProfile.timeout &&
+    profile.apiMode === defaultProfile.apiMode &&
     profile.codexCli === false &&
-    profile.apiProxy === DEFAULT_OPENAI_API_PROXY &&
+    profile.apiProxy === defaultProfile.apiProxy &&
     profile.streamImages === false &&
     profile.streamPartialImages === DEFAULT_STREAM_PARTIAL_IMAGES
 }

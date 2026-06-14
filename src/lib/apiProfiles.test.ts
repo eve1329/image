@@ -21,6 +21,12 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+async function loadDeploymentApiProfilesModule() {
+  vi.resetModules()
+  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://gptch.cloud/v1')
+  return import('./apiProfiles')
+}
+
 describe('validateApiProfile', () => {
   it('allows empty API URL when API proxy is enabled and available', () => {
     vi.stubEnv('VITE_API_PROXY_AVAILABLE', 'true')
@@ -38,6 +44,125 @@ describe('validateApiProfile', () => {
       apiKey: 'test-key',
       apiProxy: true,
     }))).toBe('缺少 API URL')
+  })
+})
+
+describe('deployment async default profile', () => {
+  it('creates the default gptch.cloud profile with a hidden async provider mapping', async () => {
+    const {
+      DEFAULT_SETTINGS: deploymentDefaultSettings,
+      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
+      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
+      createDefaultOpenAIProfile: createDeploymentDefaultOpenAIProfile,
+      getApiProviderLabel,
+      getCustomProviderDefinition,
+    } = await loadDeploymentApiProfilesModule()
+
+    const profile = createDeploymentDefaultOpenAIProfile()
+    const provider = getCustomProviderDefinition(deploymentDefaultSettings, profile.provider)
+
+    expect(profile).toMatchObject({
+      id: deploymentDefaultProfileId,
+      provider: expect.not.stringMatching(/^openai$/),
+      baseUrl: 'https://gptch.cloud/v1',
+      model: deploymentDefaultModel,
+      apiMode: 'images',
+    })
+    expect(getApiProviderLabel(deploymentDefaultSettings, profile.provider)).toBe('OpenAI')
+    expect(provider).toMatchObject({
+      submit: {
+        path: 'images/generations/async',
+        method: 'POST',
+        taskIdPath: 'data.task_id',
+      },
+      editSubmit: {
+        path: 'images/edits',
+        method: 'POST',
+      },
+      poll: {
+        path: 'images/tasks/{task_id}',
+        method: 'GET',
+        statusPath: 'data.status',
+        successValues: ['SUCCESS'],
+        failureValues: ['FAILURE'],
+        errorPath: 'data.fail_reason',
+        result: {
+          imageUrlPaths: ['data.result.data.*.url'],
+        },
+      },
+    })
+  })
+
+  it('migrates stored untouched default profiles to the deployment async provider while preserving credentials', async () => {
+    const {
+      DEFAULT_STREAM_PARTIAL_IMAGES,
+      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
+      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
+      normalizeSettings: normalizeDeploymentSettings,
+    } = await loadDeploymentApiProfilesModule()
+
+    const settings = normalizeDeploymentSettings({
+      profiles: [{
+        id: deploymentDefaultProfileId,
+        name: '默认',
+        provider: 'openai',
+        baseUrl: 'https://gptch.cloud/v1',
+        apiKey: 'test-key',
+        model: deploymentDefaultModel,
+        timeout: 321,
+        apiMode: 'images',
+        codexCli: false,
+        apiProxy: false,
+        streamImages: false,
+        streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
+      }],
+    })
+
+    expect(settings.profiles[0]).toMatchObject({
+      id: deploymentDefaultProfileId,
+      provider: expect.not.stringMatching(/^openai$/),
+      baseUrl: 'https://gptch.cloud/v1',
+      apiKey: 'test-key',
+      model: deploymentDefaultModel,
+      timeout: 321,
+      apiMode: 'images',
+    })
+  })
+
+  it('does not overwrite persisted customized profiles during deployment migration', async () => {
+    const {
+      DEFAULT_STREAM_PARTIAL_IMAGES,
+      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
+      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
+      normalizeSettings: normalizeDeploymentSettings,
+    } = await loadDeploymentApiProfilesModule()
+
+    const settings = normalizeDeploymentSettings({
+      profiles: [{
+        id: deploymentDefaultProfileId,
+        name: '默认',
+        provider: 'openai',
+        baseUrl: 'https://api.example.com/v1',
+        apiKey: 'test-key',
+        model: deploymentDefaultModel,
+        timeout: 321,
+        apiMode: 'images',
+        codexCli: false,
+        apiProxy: false,
+        streamImages: false,
+        streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
+      }],
+    })
+
+    expect(settings.profiles[0]).toMatchObject({
+      id: deploymentDefaultProfileId,
+      provider: 'openai',
+      baseUrl: 'https://api.example.com/v1',
+      apiKey: 'test-key',
+      model: deploymentDefaultModel,
+      timeout: 321,
+      apiMode: 'images',
+    })
   })
 })
 

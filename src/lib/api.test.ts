@@ -3,6 +3,14 @@ import { DEFAULT_PARAMS } from '../types'
 import { DEFAULT_SETTINGS } from './apiProfiles'
 import { callImageApi } from './api'
 
+async function loadDeploymentApiModules() {
+  vi.resetModules()
+  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://gptch.cloud/v1')
+  const apiProfiles = await import('./apiProfiles')
+  const api = await import('./api')
+  return { ...apiProfiles, ...api }
+}
+
 describe('callImageApi', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -916,5 +924,245 @@ describe('callImageApi', () => {
     await expect(promise).resolves.toEqual({
       images: ['data:image/png;base64,aW1hZ2U='],
     })
+  })
+
+  it('prefers returned base64 over downloading image URLs for custom async poll results', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ task_id: 'task-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: {
+          status: 'SUCCESS',
+          data: {
+            data: [{
+              b64_json: 'aW1hZ2U=',
+              url: 'https://example.com/generated.png',
+            }],
+          },
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+
+    const promise = callImageApi({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        baseUrl: 'https://api.example.com/v1',
+        customProviders: [{
+          id: 'custom-async',
+          name: 'Custom Async',
+          template: 'http-image',
+          submit: {
+            path: 'images/generations',
+            method: 'POST',
+            contentType: 'json',
+            query: { async: 'true' },
+            body: { model: '$profile.model', prompt: '$prompt' },
+            taskIdPath: 'task_id',
+          },
+          poll: {
+            path: 'images/tasks/{task_id}',
+            method: 'GET',
+            intervalSeconds: 5,
+            statusPath: 'data.status',
+            successValues: ['SUCCESS'],
+            failureValues: ['FAILURE'],
+            result: {
+              imageUrlPaths: ['data.data.data.*.url'],
+              b64JsonPaths: ['data.data.data.*.b64_json'],
+            },
+          },
+        }],
+        profiles: [{
+          ...DEFAULT_SETTINGS.profiles[0],
+          id: 'profile-custom',
+          provider: 'custom-async',
+          baseUrl: 'https://api.example.com/v1',
+          apiKey: 'test-key',
+          model: 'model',
+          timeout: 60,
+          responseFormatB64Json: true,
+        }],
+        activeProfileId: 'profile-custom',
+      },
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: [],
+    })
+
+    await expect(promise).resolves.toEqual({
+      images: ['data:image/png;base64,aW1hZ2U='],
+      rawImageUrls: ['https://example.com/generated.png'],
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.example.com/v1/images/generations?async=true')
+    expect(fetchMock.mock.calls[1][0]).toBe('https://api.example.com/v1/images/tasks/task-1')
+  })
+
+  it('uses the deployment async provider by default and adds Authorization for same-origin task content downloads', async () => {
+    const { callImageApi: callDeploymentImageApi, createDefaultOpenAIProfile, normalizeSettings } = await loadDeploymentApiModules()
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        success: true,
+        message: '',
+        data: {
+          task_id: 'task-1',
+          status: 'QUEUED',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        success: true,
+        message: '',
+        data: {
+          task_id: 'task-1',
+          status: 'SUCCESS',
+          result: {
+            data: [{ url: '/v1/images/tasks/task-1/content/0' }],
+          },
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response('ok', {
+        status: 200,
+        headers: { 'Content-Type': 'image/png' },
+      }))
+
+    const settings = normalizeSettings({
+      profiles: [
+        createDefaultOpenAIProfile({ apiKey: 'test-key' }),
+      ],
+    })
+    const result = await callDeploymentImageApi({
+      settings,
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: [],
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock.mock.calls[0][0]).toBe('https://gptch.cloud/v1/images/generations/async')
+    expect(fetchMock.mock.calls[1][0]).toBe('https://gptch.cloud/v1/images/tasks/task-1')
+    expect(fetchMock.mock.calls[2][0]).toBe('/v1/images/tasks/task-1/content/0')
+    expect(fetchMock.mock.calls[2][1]).toMatchObject({
+      headers: {
+        Authorization: 'Bearer test-key',
+      },
+    })
+    expect(result).toEqual({
+      images: ['data:image/png;base64,b2s='],
+      rawImageUrls: ['/v1/images/tasks/task-1/content/0'],
+    })
+  })
+
+  it('keeps deployment image edits on the synchronous images/edits path', async () => {
+    const { callImageApi: callDeploymentImageApi, createDefaultOpenAIProfile, normalizeSettings } = await loadDeploymentApiModules()
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({
+      data: [{ b64_json: 'aW1hZ2U=' }],
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+
+    await callDeploymentImageApi({
+      settings: normalizeSettings({
+        profiles: [
+          createDefaultOpenAIProfile({ apiKey: 'test-key' }),
+        ],
+      }),
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: ['data:image/png;base64,aW1hZ2U='],
+    })
+
+    const calledUrls = fetchMock.mock.calls.map((call) => String(call[0]))
+    expect(calledUrls).toContain('https://gptch.cloud/v1/images/edits')
+    expect(calledUrls).not.toContain('https://gptch.cloud/v1/images/generations/async')
+    expect(calledUrls).not.toContain('https://gptch.cloud/v1/images/tasks/task-1')
+  })
+
+  it('does not send Authorization when downloading third-party image URLs from Images API responses', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        data: [{ url: 'https://image1.vibelearning.top/generated.png' }],
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response('ok', {
+        status: 200,
+        headers: { 'Content-Type': 'image/png' },
+      }))
+
+    await callImageApi({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        apiKey: 'test-key',
+        baseUrl: 'https://api.example.com/v1',
+        profiles: DEFAULT_SETTINGS.profiles.map((profile) => ({
+          ...profile,
+          apiKey: 'test-key',
+          baseUrl: 'https://api.example.com/v1',
+        })),
+      },
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: [],
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock.mock.calls[1][0]).toBe('https://image1.vibelearning.top/generated.png')
+    expect(fetchMock.mock.calls[1][1]).not.toMatchObject({
+      headers: expect.objectContaining({
+        Authorization: expect.any(String),
+      }),
+    })
+  })
+
+  it('surfaces poll failure reasons from the deployment async provider', async () => {
+    const { callImageApi: callDeploymentImageApi, createDefaultOpenAIProfile, normalizeSettings } = await loadDeploymentApiModules()
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        success: true,
+        message: '',
+        data: {
+          task_id: 'task-1',
+          status: 'QUEUED',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        success: true,
+        message: '',
+        data: {
+          task_id: 'task-1',
+          status: 'FAILURE',
+          fail_reason: 'upstream timeout',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+
+    await expect(callDeploymentImageApi({
+      settings: normalizeSettings({
+        profiles: [
+          createDefaultOpenAIProfile({ apiKey: 'test-key' }),
+        ],
+      }),
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: [],
+    })).rejects.toThrow('upstream timeout')
   })
 })

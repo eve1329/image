@@ -94,7 +94,7 @@ function readFalImageSize(value: unknown): Partial<TaskParams> | undefined {
 async function parseFalImageResults(
   payload: FalApiResponse,
   fallbackMime: string,
-  profile: Pick<ApiProfile, 'baseUrl' | 'apiKey'>,
+  profile: Pick<ApiProfile, 'baseUrl' | 'apiKey' | 'responseFormatB64Json'>,
   customBaseUrlLabel: string | null,
   signal?: AbortSignal,
 ): Promise<Array<{
@@ -117,6 +117,7 @@ async function parseFalImageResults(
       results.push({
         image: isHttpUrl(value) ? await fetchImageUrlAsDataUrl(value, fallbackMime, {
           signal,
+          responseFormatB64JsonEnabled: Boolean(profile.responseFormatB64Json),
           authContext: {
             profileBaseUrl: profile.baseUrl,
             apiKey: profile.apiKey,

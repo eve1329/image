@@ -1165,4 +1165,43 @@ describe('callImageApi', () => {
       inputImageDataUrls: [],
     })).rejects.toThrow('upstream timeout')
   })
+
+  it('does not suggest enabling Base64 again when URL download fails after response_format b64_json was already requested', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input)
+      if (init?.mode === 'no-cors') {
+        return new Response(null, { status: 200 })
+      }
+      if (url === 'https://api.example.com/v1/images/generations') {
+        return new Response(JSON.stringify({
+          data: [{ url: 'https://cdn.example.com/generated.png' }],
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      throw new TypeError('Failed to fetch')
+    })
+
+    await expect(callImageApi({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        apiKey: 'test-key',
+        baseUrl: 'https://api.example.com/v1',
+        profiles: DEFAULT_SETTINGS.profiles.map((profile) => ({
+          ...profile,
+          apiKey: 'test-key',
+          baseUrl: 'https://api.example.com/v1',
+          responseFormatB64Json: true,
+        })),
+      },
+      prompt: 'prompt',
+      params: { ...DEFAULT_PARAMS },
+      inputImageDataUrls: [],
+    })).rejects.toThrow('图片链接下载失败（可能因跨域限制、链接过期或网络异常）。 可点链接按钮复制结果链接。')
+
+    const [, submitInit] = fetchMock.mock.calls[0]
+    const submitBody = JSON.parse(String((submitInit as RequestInit).body))
+    expect(submitBody.response_format).toBe('b64_json')
+  })
 })

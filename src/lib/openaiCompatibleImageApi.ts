@@ -145,6 +145,7 @@ function createRequestHeaders(profile: ApiProfile): Record<string, string> {
 function createImageDownloadOptions(profile: ApiProfile, signal?: AbortSignal) {
   return {
     signal,
+    responseFormatB64JsonEnabled: Boolean(profile.responseFormatB64Json),
     authContext: {
       profileBaseUrl: profile.baseUrl,
       apiKey: profile.apiKey,

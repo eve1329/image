@@ -1,10 +1,10 @@
-# gptch.cloud/image Blue/Green Deployment Implementation Plan
+# Host-Managed /image Blue/Green Deployment Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add repo-owned deployment assets and documentation for rolling this frontend out to `https://gptch.cloud/image/` on the existing `new-api` host, then verify and execute the rollout safely.
+**Goal:** Add repo-owned deployment assets and documentation for rolling this frontend out to a host-managed `/image/` route on the existing API host, then verify and execute the rollout safely.
 
-**Architecture:** Keep the app as a static SPA container built from this repo, ship a `linux/amd64` image to the existing server over `docker save | ssh root docker load`, run blue/green containers on loopback ports `3200/3201`, and switch host nginx by editing only a dedicated `/image/` snippet include. The app keeps requesting `https://gptch.cloud/v1` directly, with the container-side `/api-proxy/` disabled.
+**Architecture:** Keep the app as a static SPA container built from this repo, ship a `linux/amd64` image to the existing server over `docker save | ssh <remote> docker load`, run blue/green containers on loopback ports `3200/3201`, and switch host nginx by editing only a dedicated `/image/` snippet include. The current default example keeps requesting `https://artworkers.top/v1` directly, with the container-side `/api-proxy/` disabled.
 
 **Tech Stack:** Bash, Docker Buildx, Nginx, SSH/SCP, Node.js, Vite, Vitest
 
@@ -20,18 +20,18 @@
 - Create: `deploy/nginx.image-snippet.conf.example`
 - Create: `docs/installation/bluegreen-host-image-runbook.md`
 
-- [ ] **Step 1: Write the file changes**
+- [x] **Step 1: Write the file changes**
 
 ```text
 - Ignore `.agents/` in git so repo-local handoff state stays local.
 - Replace placeholder content in `.agents/state/process.md` with the current task, inspected facts, constraints, and next step.
 - Add `scripts/deploy/bluegreen-host.sh` with:
   - defaults:
-    - remote=`root`
+    - remote=`newapi-16`
     - remote env file=`/root/image/deploy/bluegreen-host.env`
-    - nginx site=`/etc/nginx/sites-enabled/gptch.cloud`
+    - nginx site=`/etc/nginx/sites-enabled/artworkers.top`
     - nginx snippet=`/etc/nginx/snippets/gpt-image-playground-image.conf`
-    - public url=`https://gptch.cloud/image/`
+    - public url=`https://artworkers.top/image/`
   - flags:
     - `--image-tag`
     - `--skip-build`
@@ -48,7 +48,7 @@
     - refuse dirty worktree for `--build-source worktree` unless `--allow-dirty-worktree`
     - build `docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t <tag> --load .`
     - verify image inspect reports `os=linux arch=amd64`
-    - transfer with `docker save | ssh root docker load`
+    - transfer with `docker save | ssh <remote> docker load`
   - remote behavior:
     - load env file
     - detect active port from the dedicated nginx snippet (`3200` or `3201`)
@@ -56,7 +56,7 @@
     - stop any running `*-pre-deploy-*` backups for the target color
     - rename existing target container to `*-pre-deploy-*`
     - `docker run -d` target container with bridge networking and `-p 127.0.0.1:<port>:80`
-    - pass `DEFAULT_API_URL=https://gptch.cloud/v1`, `ENABLE_API_PROXY=false`, `LOCK_API_PROXY=false`, `HOST=0.0.0.0`, `PORT=80` from env defaults
+    - pass `DEFAULT_API_URL=https://artworkers.top/v1`, `ENABLE_API_PROXY=false`, `LOCK_API_PROXY=false`, `HOST=0.0.0.0`, `PORT=80` from env defaults
     - health-check target loopback root, `manifest.webmanifest`, and `sw.js`
     - write or update the nginx snippet so only `/image/` is proxied to the active port
     - ensure the main nginx site includes that snippet before `location /`
@@ -86,7 +86,7 @@
   - public and standby verification commands
 ```
 
-- [ ] **Step 2: Review the new files for contract consistency**
+- [x] **Step 2: Review the new files for contract consistency**
 
 Run: `sed -n '1,260p' scripts/deploy/bluegreen-host.sh && printf '\n---\n' && sed -n '1,220p' deploy/bluegreen-host.env.example && printf '\n---\n' && sed -n '1,220p' deploy/nginx.image-snippet.conf.example && printf '\n---\n' && sed -n '1,260p' docs/installation/bluegreen-host-image-runbook.md`
 Expected: defaults, ports, container names, snippet path, and public URL all match the approved plan.
@@ -108,15 +108,15 @@ git commit -m "docs: add gptch cloud image deploy assets"
 - Modify: `README.md`
 - Test: `README.md`
 
-- [ ] **Step 1: Update the Docker/deployment documentation**
+- [x] **Step 1: Update the Docker/deployment documentation**
 
 ```text
-- Keep existing generic Docker usage docs, but add a focused subsection for the same-host `gptch.cloud/image` deployment.
+- Keep existing generic Docker usage docs, but add a focused subsection for the same-host `/image` deployment.
 - State clearly that this deployment:
   - runs on the same host as `new-api`
   - publishes under `/image/`
   - keeps `new-api` on `/` and `/v1`
-  - sets `DEFAULT_API_URL=https://gptch.cloud/v1`
+  - sets `DEFAULT_API_URL=https://artworkers.top/v1`
   - disables container `/api-proxy/`
 - Link to `docs/installation/bluegreen-host-image-runbook.md`
 - Include the main release command:
@@ -125,9 +125,9 @@ git commit -m "docs: add gptch cloud image deploy assets"
   - `bash scripts/deploy/bluegreen-host.sh --skip-build --image-tag image:codex-<timestamp>`
 ```
 
-- [ ] **Step 2: Verify the README section renders as expected**
+- [x] **Step 2: Verify the README section renders as expected**
 
-Run: `rg -n "gptch.cloud/image|bluegreen-host.sh|bluegreen-host-image-runbook" README.md`
+Run: `rg -n "artworkers.top/image|bluegreen-host.sh|bluegreen-host-image-runbook" README.md`
 Expected: all three anchors appear in the deployment section.
 
 - [ ] **Step 3: Commit the README update**
@@ -175,7 +175,7 @@ git commit -m "fix: address local deploy verification issues"
 
 **Files:**
 - Remote: `/root/image/deploy/bluegreen-host.env`
-- Remote: `/etc/nginx/sites-enabled/gptch.cloud`
+- Remote: `/etc/nginx/sites-enabled/artworkers.top`
 - Remote: `/etc/nginx/snippets/gpt-image-playground-image.conf`
 
 - [ ] **Step 1: Copy the env example and fill the initial host values**
@@ -185,7 +185,7 @@ Expected: remote env file exists for first-time editing.
 
 - [ ] **Step 2: Apply the one-time nginx include integration**
 
-Run: `ssh root "python3 - <<'PY'\nfrom pathlib import Path\nsite = Path('/etc/nginx/sites-enabled/gptch.cloud')\ntext = site.read_text()\nneedle = '    location / {'\ninclude = '    include /etc/nginx/snippets/gpt-image-playground-image.conf;\\n'\nif include not in text:\n    text = text.replace(needle, include + needle, 1)\n    site.write_text(text)\nPY\nnginx -t && systemctl reload nginx"`
+Run: `ssh newapi-16 "python3 - <<'PY'\nfrom pathlib import Path\nsite = Path('/etc/nginx/sites-enabled/artworkers.top')\ntext = site.read_text()\nneedle = '    location / {'\ninclude = '    include /etc/nginx/snippets/gpt-image-playground-image.conf;\\n'\nif include not in text:\n    text = text.replace(needle, include + needle, 1)\n    site.write_text(text)\nPY\nnginx -t && systemctl reload nginx"`
 Expected: nginx config test passes and the site now includes the image snippet before the root location.
 
 - [ ] **Step 3: Run the deploy script**
@@ -195,15 +195,15 @@ Expected: local build, image transfer, standby container replacement, snippet cu
 
 - [ ] **Step 4: Verify the public route and static assets**
 
-Run: `curl -I https://gptch.cloud/image/ && curl -fsS https://gptch.cloud/image/ | grep -i "GPT Image Playground"`
+Run: `curl -I https://artworkers.top/image/ && curl -fsS https://artworkers.top/image/ | grep -i "GPT Image Playground"`
 Expected: HTTP headers return success/redirect as expected and HTML contains `GPT Image Playground`.
 
 - [ ] **Step 5: Verify API path assumptions manually**
 
 ```text
-- Open `https://gptch.cloud/image/` in a browser.
+- Open `https://artworkers.top/image/` in a browser.
 - Confirm static resources load from `/image/assets/...`.
-- Confirm the default API URL in the UI resolves to `https://gptch.cloud/v1`.
+- Confirm the default API URL in the UI resolves to `https://artworkers.top/v1`.
 - Confirm network requests go to `/v1/...`, not `/image/api-proxy/...`.
 - Use a valid test key to verify at least `GET /v1/models` or one minimal image-generation request.
 ```

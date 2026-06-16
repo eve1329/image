@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remote Blue/Green Deploy"
+  short_description: "Commit, push, build locally, load remotely, cut /image traffic safely"
+  default_prompt: "Use $remote-bluegreen-deploy and prefer scripts/deploy/bluegreen-host.sh for host-managed /image deploys, including local linux/amd64 build, ssh image transfer, safe image-blue or image-green-amd64 replacement, and nginx /image/ snippet cutover."

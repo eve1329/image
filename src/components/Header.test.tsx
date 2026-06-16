@@ -70,10 +70,10 @@ describe('Header', () => {
     })
   })
 
-  it('renders cherry image as plain title text without the old external link', () => {
+  it('renders artworkers image as plain title text without the old external link', () => {
     const html = renderToStaticMarkup(<Header />)
 
-    expect(html).toContain('cherry image')
+    expect(html).toContain('artworkers image')
     expect(html).not.toContain('GPT Image Playground')
     expect(html).not.toContain('https://github.com/CookSleep/gpt_image_playground')
   })

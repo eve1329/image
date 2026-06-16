@@ -2,5 +2,7 @@ node_modules/
 dist/
 dev-proxy.config.json
 .wrangler/
-.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
 .playwright-cli/

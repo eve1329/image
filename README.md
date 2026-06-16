@@ -288,20 +288,21 @@ services:
 
 使用 `latest` 标签时，重新拉取镜像并重启即可更新（如 `docker compose pull && docker compose up -d`）。若需固定版本可使用官方提供的版本号标签（如 `0.2.x`）。
 
-**3. `gptch.cloud/image` 同机蓝绿部署**
+**3. `/image` 同机蓝绿部署**
 
-如果你要把这个前端和 `new-api` 部署在同一台服务器上，并通过 `https://gptch.cloud/image/` 对外提供服务，请使用本仓库内的宿主机蓝绿脚本，而不是另起子域名或启用容器内 `/api-proxy/`：
+如果你要把这个前端和现有 API 服务部署在同一台服务器上，并通过现有主站的 `/image/` 子路径对外提供服务，请使用本仓库内的宿主机蓝绿脚本，而不是另起子域名或启用容器内 `/api-proxy/`：
 
 ```bash
 bash scripts/deploy/bluegreen-host.sh
 ```
 
-这条部署路径的固定约束是：
+这条部署路径的默认示例与固定约束是：
 
-- 公网入口为 `https://gptch.cloud/image/`
-- 默认 API URL 为 `https://gptch.cloud/v1`
+- 默认公网入口为 `https://artworkers.top/image/`
+- 默认 API URL 为 `https://artworkers.top/v1`
 - 容器环境固定关闭 `/api-proxy/`
 - 蓝绿容器通过 `127.0.0.1:3200` / `127.0.0.1:3201` 接入主机 Nginx snippet
+- 远端 SSH alias、Nginx site、Public URL 都可以通过脚本参数或 `BLUEGREEN_*` 环境变量覆盖
 
 首次远端准备、Nginx 一次性接入、回滚步骤和验证命令见：
 
@@ -311,6 +312,15 @@ bash scripts/deploy/bluegreen-host.sh
 
 ```bash
 bash scripts/deploy/bluegreen-host.sh --skip-build --image-tag image:codex-20260612183000
+```
+
+如果目标机器不是默认示例，直接显式传参：
+
+```bash
+bash scripts/deploy/bluegreen-host.sh \
+  --remote <ssh-alias> \
+  --nginx-site </etc/nginx/sites-enabled/your-site> \
+  --public-url <https://your-domain/image/>
 ```
 
 </details>

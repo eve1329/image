@@ -6,11 +6,11 @@ SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-DEFAULT_REMOTE_ALIAS="root"
-DEFAULT_REMOTE_ENV_FILE="/root/image/deploy/bluegreen-host.env"
-DEFAULT_NGINX_SITE="/etc/nginx/sites-enabled/gptch.cloud"
-DEFAULT_NGINX_SNIPPET="/etc/nginx/snippets/gpt-image-playground-image.conf"
-DEFAULT_PUBLIC_URL="https://gptch.cloud/image/"
+DEFAULT_REMOTE_ALIAS="${BLUEGREEN_REMOTE_ALIAS:-newapi-16}"
+DEFAULT_REMOTE_ENV_FILE="${BLUEGREEN_REMOTE_ENV_FILE:-/root/image/deploy/bluegreen-host.env}"
+DEFAULT_NGINX_SITE="${BLUEGREEN_NGINX_SITE:-/etc/nginx/sites-enabled/artworkers.top}"
+DEFAULT_NGINX_SNIPPET="${BLUEGREEN_NGINX_SNIPPET:-/etc/nginx/snippets/gpt-image-playground-image.conf}"
+DEFAULT_PUBLIC_URL="${BLUEGREEN_PUBLIC_URL:-https://artworkers.top/image/}"
 
 REMOTE_ALIAS="$DEFAULT_REMOTE_ALIAS"
 REMOTE_ENV_FILE="$DEFAULT_REMOTE_ENV_FILE"
@@ -81,7 +81,7 @@ require_arg() {
 
 usage() {
   cat <<EOF
-Blue/green deploy for GPT Image Playground on gptch.cloud/image
+Blue/green deploy for GPT Image Playground on a host-managed /image route
 
 Usage:
   $SCRIPT_NAME [options]
@@ -457,7 +457,7 @@ replace_color() {
     --name "$container_name" \
     --restart "$restart_policy" \
     -p "127.0.0.1:${port}:${PORT:-80}" \
-    -e DEFAULT_API_URL="${DEFAULT_API_URL:-https://gptch.cloud/v1}" \
+    -e DEFAULT_API_URL="${DEFAULT_API_URL:-${BLUEGREEN_DEFAULT_API_URL:-https://artworkers.top/v1}}" \
     -e ENABLE_API_PROXY="${ENABLE_API_PROXY:-false}" \
     -e LOCK_API_PROXY="${LOCK_API_PROXY:-false}" \
     -e HOST="${HOST:-0.0.0.0}" \

@@ -23,7 +23,7 @@ afterEach(() => {
 
 async function loadDeploymentApiProfilesModule() {
   vi.resetModules()
-  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://gptch.cloud/v1')
+  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://artworkers.top/v1')
   return import('./apiProfiles')
 }
 
@@ -48,7 +48,7 @@ describe('validateApiProfile', () => {
 })
 
 describe('deployment async default profile', () => {
-  it('creates the default gptch.cloud profile with a hidden async provider mapping', async () => {
+  it('creates the default artworkers.top profile with a hidden async provider mapping', async () => {
     const {
       DEFAULT_SETTINGS: deploymentDefaultSettings,
       DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
@@ -64,7 +64,7 @@ describe('deployment async default profile', () => {
     expect(profile).toMatchObject({
       id: deploymentDefaultProfileId,
       provider: expect.not.stringMatching(/^openai$/),
-      baseUrl: 'https://gptch.cloud/v1',
+      baseUrl: 'https://artworkers.top/v1',
       model: deploymentDefaultModel,
       apiMode: 'images',
     })
@@ -106,7 +106,7 @@ describe('deployment async default profile', () => {
         id: deploymentDefaultProfileId,
         name: '默认',
         provider: 'openai',
-        baseUrl: 'https://gptch.cloud/v1',
+        baseUrl: 'https://artworkers.top/v1',
         apiKey: 'test-key',
         model: deploymentDefaultModel,
         timeout: 321,
@@ -121,7 +121,7 @@ describe('deployment async default profile', () => {
     expect(settings.profiles[0]).toMatchObject({
       id: deploymentDefaultProfileId,
       provider: expect.not.stringMatching(/^openai$/),
-      baseUrl: 'https://gptch.cloud/v1',
+      baseUrl: 'https://artworkers.top/v1',
       apiKey: 'test-key',
       model: deploymentDefaultModel,
       timeout: 321,

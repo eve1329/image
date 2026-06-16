@@ -42,7 +42,7 @@ function newId(prefix: string) {
 
 const ADD_CUSTOM_PROVIDER_VALUE = '__add_custom_provider__'
 const COPY_IMPORT_URL_OPTIONS_STORAGE_KEY = 'gpt-image-playground.copy-import-url-options'
-const FIXED_API_URL = 'https://gptch.cloud/v1'
+const FIXED_API_URL = 'https://artworkers.top/v1'
 const FIXED_IMAGE_MODEL = 'gpt-image-2'
 const FIXED_TIMEOUT_SECONDS = 9000
 

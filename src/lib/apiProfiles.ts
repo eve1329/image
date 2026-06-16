@@ -21,7 +21,7 @@ import { isImportableConfigUrl } from './customProviderConfigUrl'
 export { DEFAULT_STREAM_PARTIAL_IMAGES } from '../types'
 
 const OPENAI_DEFAULT_BASE_URL = 'https://api.openai.com/v1'
-const DEPLOYMENT_DEFAULT_BASE_URL = 'https://gptch.cloud/v1'
+const DEPLOYMENT_DEFAULT_BASE_URL = 'https://artworkers.top/v1'
 const DEPLOYMENT_ASYNC_OPENAI_PROVIDER_ID = 'openai-deployment-async'
 const RAW_DEFAULT_API_URL = readRuntimeEnv(import.meta.env.VITE_DEFAULT_API_URL)
 const DEFAULT_OPENAI_API_PROXY = readRuntimeEnv(import.meta.env.VITE_API_PROXY_AVAILABLE) === 'true'

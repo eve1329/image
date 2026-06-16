@@ -154,12 +154,12 @@ export default function Header() {
                 <>
                   <span className="min-w-0 truncate text-[17px] font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:hidden" title={favoriteCollectionTitle}>{favoriteCollectionTitle}</span>
                   <span className="hidden text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:inline">
-                    cherry image
+                    artworkers image
                   </span>
                 </>
               ) : (
                 <span className="text-[17px] sm:text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100">
-                  cherry image
+                  artworkers image
                 </span>
               )}
               {hasUpdate && latestRelease && (

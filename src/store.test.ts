@@ -759,6 +759,79 @@ describe('custom async task recovery', () => {
     })
   })
 
+  it('rehydrates persisted running custom async tasks into a recoverable error state before retrying recovery', async () => {
+    vi.useFakeTimers()
+    const now = vi.spyOn(Date, 'now').mockReturnValue(10_000)
+
+    try {
+      const asyncProfile = createDefaultOpenAIProfile({
+        id: 'async-profile',
+        provider: 'openai-deployment-async',
+        baseUrl: 'https://gptch.cloud/v1',
+        apiKey: 'test-key',
+        model: 'gpt-image-2',
+        apiMode: 'images',
+      })
+      useStore.setState({
+        settings: normalizeSettings({
+          ...DEFAULT_SETTINGS,
+          profiles: [asyncProfile],
+          activeProfileId: asyncProfile.id,
+        }),
+      })
+      vi.mocked(getCustomQueuedImageResult).mockImplementationOnce(() => new Promise(() => {}) as never)
+
+      const customAsyncTask = task({
+        id: 'custom-async-running-after-restart',
+        apiProvider: 'openai-deployment-async',
+        apiProfileId: asyncProfile.id,
+        apiProfileName: '异步 OpenAI',
+        apiModel: 'gpt-image-2',
+        customTaskId: 'task-1',
+        customRecoverable: false,
+        status: 'running',
+        error: null,
+        createdAt: 2_000,
+        finishedAt: null,
+        elapsed: null,
+      })
+      await putDbTask(customAsyncTask)
+
+      await initStore()
+
+      const rehydrated = useStore.getState().tasks.find((item) => item.id === customAsyncTask.id)
+      expect(rehydrated).toMatchObject({
+        id: customAsyncTask.id,
+        status: 'error',
+        customRecoverable: true,
+        error: '与自定义异步任务的连接已断开，之后会继续查询任务结果。',
+        finishedAt: 10_000,
+        elapsed: 8_000,
+      })
+      const persisted = (await getAllTasks()).find((item) => item.id === customAsyncTask.id)
+      expect(persisted).toMatchObject({
+        id: customAsyncTask.id,
+        status: 'error',
+        customRecoverable: true,
+        error: '与自定义异步任务的连接已断开，之后会继续查询任务结果。',
+        finishedAt: 10_000,
+        elapsed: 8_000,
+      })
+      expect(getCustomQueuedImageResult).not.toHaveBeenCalled()
+
+      await vi.runOnlyPendingTimersAsync()
+
+      expect(getCustomQueuedImageResult).toHaveBeenCalledTimes(1)
+      expect(vi.mocked(getCustomQueuedImageResult).mock.calls[0]?.[0]).toMatchObject({ id: asyncProfile.id })
+      expect(vi.mocked(getCustomQueuedImageResult).mock.calls[0]?.[1]).toMatchObject({ id: 'openai-deployment-async' })
+      expect(vi.mocked(getCustomQueuedImageResult).mock.calls[0]?.[2]).toBe(customAsyncTask.customTaskId)
+      expect(vi.mocked(getCustomQueuedImageResult).mock.calls[0]?.[3]).toEqual(customAsyncTask.params)
+    } finally {
+      now.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
   it('marks persisted custom async tasks as failed when the original API profile is missing after restart', async () => {
     const customAsyncTask = task({
       id: 'custom-async-missing-profile',

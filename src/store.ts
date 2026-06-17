@@ -82,6 +82,7 @@ const agentRoundControllers = new Map<string, AbortController>()
 let agentConversationPersistenceReady = false
 let agentConversationMigrationPending = false
 const OPENAI_INTERRUPTED_ERROR = '请求中断'
+const CUSTOM_RECOVERY_PENDING_ERROR = '与自定义异步任务的连接已断开，之后会继续查询任务结果。'
 const AGENT_STOPPED_MESSAGE = '已停止生成。'
 const AGENT_CONVERSATION_TITLE_MAX_LENGTH = 28
 const ERROR_TOAST_MAX_LENGTH = 80
@@ -1713,6 +1714,26 @@ export function markInterruptedOpenAIRunningTasks(tasks: TaskRecord[], now = Dat
   return { tasks: updatedTasks, interruptedTasks }
 }
 
+function markRecoverableCustomRunningTasks(tasks: TaskRecord[], now = Date.now()) {
+  const recoverableTasks: TaskRecord[] = []
+  const updatedTasks = tasks.map((task) => {
+    if (task.status !== 'running' || !task.customTaskId) return task
+
+    const updated: TaskRecord = {
+      ...task,
+      status: 'error',
+      error: CUSTOM_RECOVERY_PENDING_ERROR,
+      customRecoverable: true,
+      finishedAt: now,
+      elapsed: Math.max(0, now - task.createdAt),
+    }
+    recoverableTasks.push(updated)
+    return updated
+  })
+
+  return { tasks: updatedTasks, recoverableTasks }
+}
+
 function clearOpenAIWatchdogTimer(taskId: string) {
   const timer = openAIWatchdogTimers.get(taskId)
   if (timer) clearTimeout(timer)
@@ -2086,8 +2107,12 @@ export async function initStore() {
   if (shouldRewritePersistedLocalState) {
     useStore.setState({})
   }
-  const { tasks: markedTasks, interruptedTasks } = markInterruptedOpenAIRunningTasks(storedTasks)
-  const interruptedTaskIds = new Set(interruptedTasks.map((task) => task.id))
+  const { tasks: interruptedMarkedTasks, interruptedTasks } = markInterruptedOpenAIRunningTasks(storedTasks)
+  const { tasks: markedTasks, recoverableTasks } = markRecoverableCustomRunningTasks(interruptedMarkedTasks)
+  const startupUpdatedTaskIds = new Set([
+    ...interruptedTasks.map((task) => task.id),
+    ...recoverableTasks.map((task) => task.id),
+  ])
   const favoriteState = useStore.getState()
   const normalizedFavorites = normalizeLoadedFavoriteState(markedTasks.map(getPersistableTask), favoriteState.favoriteCollections, favoriteState.defaultFavoriteCollectionId)
   const tasks = normalizedFavorites.tasks
@@ -2098,7 +2123,7 @@ export async function initStore() {
     useStore.getState().setDefaultFavoriteCollectionId(normalizedFavorites.defaultFavoriteCollectionId)
   }
   await Promise.all(tasks
-    .filter((task, index) => normalizedFavorites.changed || interruptedTaskIds.has(task.id) || task.rawResponsePayload !== markedTasks[index]?.rawResponsePayload)
+    .filter((task, index) => normalizedFavorites.changed || startupUpdatedTaskIds.has(task.id) || task.rawResponsePayload !== markedTasks[index]?.rawResponsePayload)
     .map((task) => putTask(task)))
   useStore.getState().setTasks(tasks)
   showSupportPromptForExistingLocalData(tasks)
@@ -4256,7 +4281,7 @@ async function executeTask(taskId: string) {
     } else if (latestCustomTaskInfo && isFalConnectionRecoverableError(err)) {
       updateTaskInStore(taskId, {
         status: 'error',
-        error: '与自定义异步任务的连接已断开，之后会继续查询任务结果。',
+        error: CUSTOM_RECOVERY_PENDING_ERROR,
         customTaskId: latestCustomTaskInfo.taskId,
         customRecoverable: true,
         finishedAt: Date.now(),

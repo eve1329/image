@@ -1,5 +1,10 @@
-const CACHE_NAME = 'gpt-image-playground-v0.1.5'
+const CACHE_NAME = 'gpt-image-playground-v0.1.6'
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './pwa-icon.svg']
+const BYPASS_CACHE_PREFIXES = ['/v1/', '/api/']
+
+function shouldBypassCache(url) {
+  return BYPASS_CACHE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -24,6 +29,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
+  if (shouldBypassCache(url)) {
+    event.respondWith(fetch(request))
+    return
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>scheme-a mockup</title>
+<style>
+  :root {
+    --bg: #05070d;
+    --bg2: #090c16;
+    --panel: rgba(12, 14, 21, 0.96);
+    --line: rgba(255,255,255,0.08);
+    --text: #f5f7fb;
+    --muted: #7f8aa5;
+    --muted2: #5d667b;
+    --accent: #35c9ff;
+    --accent2: #8e5bff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; margin: 0; overflow: hidden;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(37, 120, 255, 0.22), transparent 32%),
+      radial-gradient(circle at 82% 18%, rgba(17, 203, 255, 0.10), transparent 26%),
+      radial-gradient(circle at 12% 22%, rgba(148, 71, 255, 0.08), transparent 28%),
+      linear-gradient(180deg, #05070d 0%, #060812 56%, #05070d 100%);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif;
+    color: var(--text);
+  }
+  .frame {
+    position: relative;
+    width: 1438px;
+    height: 610px;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(9,13,21,0.45), rgba(9,13,21,0.18)),
+      radial-gradient(circle at 50% 14%, rgba(12, 58, 92, 0.22), transparent 35%),
+      linear-gradient(180deg, #05070d 0%, #060913 100%);
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(130, 152, 190, 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(130, 152, 190, 0.09) 1px, transparent 1px),
+      radial-gradient(circle at 1px 1px, rgba(154, 174, 203, 0.22) 1px, transparent 0);
+    background-size: 48px 48px, 48px 48px, 48px 48px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.40) 48%, rgba(0,0,0,0.85) 100%);
+    opacity: 0.88;
+  }
+  .glow {
+    position: absolute;
+    pointer-events: none;
+    filter: blur(24px);
+    opacity: 0.95;
+  }
+  .glow.left {
+    width: 360px; height: 240px; left: -80px; top: 22px;
+    background: radial-gradient(circle, rgba(41, 147, 255, 0.20) 0%, rgba(41, 147, 255, 0.08) 28%, transparent 72%);
+  }
+  .glow.right {
+    width: 420px; height: 300px; right: 120px; top: 14px;
+    background: radial-gradient(circle, rgba(45, 203, 255, 0.22) 0%, rgba(45, 203, 255, 0.10) 25%, transparent 72%);
+  }
+  .board {
+    position: relative;
+    display: flex;
+    gap: 0;
+    padding: 18px 22px 0;
+  }
+  .card {
+    position: relative;
+    width: 695px;
+    height: 430px;
+    overflow: hidden;
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(10, 12, 18, 0.99) 0%, rgba(7, 9, 13, 0.99) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card + .card {
+    margin-left: 0px;
+  }
+  .card.selected {
+    margin-left: -24px;
+    margin-top: 0px;
+    z-index: 2;
+    border-color: rgba(53, 201, 255, 0.58);
+    box-shadow: 0 0 0 1px rgba(53, 201, 255, 0.32), 0 24px 90px rgba(0,0,0,0.45), 0 0 44px rgba(53, 201, 255, 0.12);
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 0%, rgba(65, 169, 255, 0.08), transparent 30%);
+    pointer-events: none;
+  }
+  .card-header {
+    height: 100px;
+    padding: 18px 16px 16px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0));
+  }
+  .status-row {
+    display: flex; align-items: center; gap: 14px;
+    color: #c9d0df; font-size: 14px; font-weight: 600;
+    letter-spacing: 0.11em;
+  }
+  .status-text span { letter-spacing: 0.2em; }
+  .checkbox {
+    width: 34px; height: 34px; border-radius: 12px;
+    display: grid; place-items: center;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.92);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    font-size: 18px; line-height: 1;
+  }
+  .checkbox.checked {
+    background: linear-gradient(180deg, #3f7dff, #1d5cff);
+    color: white;
+  }
+  .title-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 12px;
+  }
+  .accent-bar {
+    width: 5px; height: 38px; border-radius: 999px;
+    background: linear-gradient(180deg, #56d2ff 0%, #6b7bff 50%, #b15cff 100%);
+    box-shadow: 0 0 18px rgba(80, 200, 255, 0.35);
+  }
+  .title { font-size: 20px; font-weight: 800; letter-spacing: 0.01em; color: white; }
+  .subtitle { margin-top: 2px; font-size: 16px; color: #8d9ab4; letter-spacing: 0.01em; }
+  .card-body {
+    display: grid; grid-template-columns: 1fr 1px 1.16fr;
+    height: calc(100% - 100px);
+  }
+  .rail, .matrix { padding: 18px 16px 16px 18px; }
+  .divider { width: 1px; background: rgba(255,255,255,0.12); }
+  .label-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    color: #7d8da7; font-size: 12px; letter-spacing: 0.32em; font-weight: 500;
+  }
+  .pill {
+    padding: 7px 12px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: #c5cedf; font-size: 13px; letter-spacing: 0;
+  }
+  .prompt {
+    margin-top: 18px;
+    color: white; font-size: 18px; font-weight: 700; line-height: 1.48;
+    max-width: 270px;
+    white-space: pre-wrap;
+  }
+  .input-label {
+    margin-top: 16px;
+    color: #6e7b94; font-size: 12px; letter-spacing: 0.22em;
+  }
+  .empty-input {
+    margin-top: 10px;
+    width: 188px;
+    border-radius: 18px;
+    border: 1px dashed rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+    color: #7b8597;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-top: 22px; max-width: 286px;
+  }
+  .meta-box {
+    min-height: 60px; border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.04);
+    padding: 11px 14px 10px;
+  }
+  .meta-k {
+    color: #6f7c92; font-size: 12px; letter-spacing: 0.18em; margin-bottom: 7px;
+  }
+  .meta-v { font-size: 18px; color: white; font-weight: 600; }
+  .matrix { padding-left: 14px; }
+  .thumb-wrap {
+    position: relative;
+    margin-top: 20px;
+    width: 206px; height: 206px;
+    border: 3px solid #ff2d49;
+    border-radius: 0;
+    background: #0d1117;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+  }
+  .thumb {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .index-chip {
+    position: absolute; left: 8px; top: 8px; z-index: 2;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(16, 16, 23, 0.95);
+    color: white; font-size: 14px; font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+  }
+  .ratio-chip {
+    position: absolute; left: 8px; bottom: 8px; z-index: 2;
+    padding: 4px 7px; border-radius: 7px;
+    background: rgba(7, 7, 12, 0.72); color: white; font-size: 12px;
+  }
+  .chip-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .mini-chip {
+    height: 32px; padding: 0 12px; border-radius: 999px;
+    display: inline-flex; align-items: center;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
+    color: #c0cadc; font-size: 13px;
+  }
+  .empty-space {
+    position: absolute; left: 0; right: 0; bottom: 0; top: 470px;
+    background: linear-gradient(180deg, rgba(3,4,8,0) 0%, rgba(3,4,8,0.26) 22%, rgba(2,3,7,0.58) 100%);
+  }
+  .side-notch {
+    position: absolute; top: 186px; width: 10px; height: 26px;
+    background: linear-gradient(180deg, rgba(53,201,255,0.95), rgba(53,201,255,0.46));
+    border-radius: 0 999px 999px 0;
+    filter: blur(0.1px);
+  }
+  .side-notch.left { left: 0; }
+  .side-notch.right { right: 0; transform: scaleX(-1); }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="grid"></div>
+    <div class="glow left"></div>
+    <div class="glow right"></div>
+    <div class="board">
+      
+      <section class="card  border-white/10 shadow-[0_24px_90px_rgba(0,0,0,0.42)]">
+        <div class="card-header">
+          <div class="status-row">
+            <div class="checkbox "></div>
+            <div class="status-text">完成 / 默认 / <span>01:12</span></div>
+          </div>
+          <div class="title-row">
+            <div class="accent-bar"></div>
+            <div>
+              <div class="title">生成任务</div>
+              <div class="subtitle">gpt-image-2</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="rail">
+            <div class="label-row">
+              <span>PROMPT RAIL</span>
+              <span class="pill">无输入</span>
+            </div>
+            <div class="prompt">生成未来的赛博朋克的画面,有人物的那种
+,类似于2077的那种</div>
+            <div class="input-label">输入图</div>
+            <div class="empty-input">没有可追溯的输入图</div>
+            <div class="meta-grid">
+              <div class="meta-box">
+                <div class="meta-k">来源</div>
+                <div class="meta-v">gallery</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-k">输出数</div>
+                <div class="meta-v">1</div>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="matrix">
+            <div class="label-row">
+              <span>OUTPUT MATRIX</span>
+              <span class="pill">1 张输出</span>
+            </div>
+            <div class="thumb-wrap">
+              <div class="index-chip">1</div>
+              <img class="thumb" src="data:image/svg+xml;charset=UTF-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20shape-rendering%3D%22geometricPrecision%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230a1020%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2245%25%22%20stop-color%3D%22%2312102b%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2307080f%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22neonA%22%20x1%3D%220%22%20x2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f44dff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%238f5cff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2323d6ff%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22neonB%22%20x1%3D%220%22%20x2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231ad5ff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231a64ff%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22street%22%20x1%3D%220%22%20x2%3D%220%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%232e123f%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ff3ea7%22%20stop-opacity%3D%220.32%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22blur%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%0A%20%20%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%2214%22%2F%3E%0A%20%20%20%20%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%20%20%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%0A%20%20%20%20%3C%2Ffilter%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22glass%22%20x1%3D%220%22%20x2%3D%220%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23eff5ff%22%20stop-opacity%3D%220.95%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23aebbe0%22%20stop-opacity%3D%220.65%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22url(%23bg)%22%2F%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%20filter%3D%22url(%23blur)%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22112%22%20cy%3D%22106%22%20r%3D%22100%22%20fill%3D%22%23ff49d1%22%20fill-opacity%3D%220.14%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22422%22%20cy%3D%22110%22%20r%3D%22118%22%20fill%3D%22%231ab4ff%22%20fill-opacity%3D%220.12%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22338%22%20cy%3D%22344%22%20r%3D%22116%22%20fill%3D%22%230f8bff%22%20fill-opacity%3D%220.12%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22134%22%20cy%3D%22346%22%20r%3D%2292%22%20fill%3D%22%23ff2d7a%22%20fill-opacity%3D%220.13%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.26%22%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%22372%22%20width%3D%22512%22%20height%3D%22140%22%20fill%3D%22url(%23street)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.04%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%3E%0A%20%20%20%20%3Crect%20x%3D%2222%22%20y%3D%22118%22%20width%3D%2236%22%20height%3D%22250%22%20rx%3D%228%22%20fill%3D%22%2307101f%22%20stroke%3D%22%232d8cff%22%20stroke-opacity%3D%220.22%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2274%22%20y%3D%2288%22%20width%3D%2254%22%20height%3D%22280%22%20rx%3D%2212%22%20fill%3D%22%2309111f%22%20stroke%3D%22%23ff58e6%22%20stroke-opacity%3D%220.18%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22142%22%20y%3D%22138%22%20width%3D%2266%22%20height%3D%22218%22%20rx%3D%2210%22%20fill%3D%22%2308101d%22%20stroke%3D%22%231fe1ff%22%20stroke-opacity%3D%220.18%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22226%22%20y%3D%22104%22%20width%3D%2238%22%20height%3D%22260%22%20rx%3D%228%22%20fill%3D%22%230c1321%22%20stroke%3D%22%23ff8a2b%22%20stroke-opacity%3D%220.14%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22282%22%20y%3D%22150%22%20width%3D%2262%22%20height%3D%22214%22%20rx%3D%2210%22%20fill%3D%22%230a1020%22%20stroke%3D%22%238f5cff%22%20stroke-opacity%3D%220.14%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.85%22%3E%0A%20%20%20%20%3Crect%20x%3D%2252%22%20y%3D%2258%22%20width%3D%22184%22%20height%3D%2288%22%20rx%3D%2214%22%20fill%3D%22%2312121d%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2266%22%20y%3D%2271%22%20width%3D%22156%22%20height%3D%2262%22%20rx%3D%2210%22%20fill%3D%22%23101726%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22114%22%20cy%3D%2296%22%20r%3D%2224%22%20fill%3D%22%23ff69e4%22%20fill-opacity%3D%220.8%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22116%22%20cy%3D%2292%22%20r%3D%2226%22%20fill%3D%22%2362d4ff%22%20fill-opacity%3D%220.48%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M86%20116%20C110%2086%20144%2086%20170%20116%22%20fill%3D%22none%22%20stroke%3D%22url(%23neonA)%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.9%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M92%20108%20C110%2098%20136%2098%20160%20108%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.76%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.88%22%3E%0A%20%20%20%20%3Crect%20x%3D%22352%22%20y%3D%22204%22%20width%3D%2258%22%20height%3D%2272%22%20rx%3D%2210%22%20fill%3D%22%230d1527%22%20stroke%3D%22%23ff49d1%22%20stroke-opacity%3D%220.2%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22428%22%20y%3D%22172%22%20width%3D%2240%22%20height%3D%22104%22%20rx%3D%2210%22%20fill%3D%22%2310192b%22%20stroke%3D%22%231ad5ff%22%20stroke-opacity%3D%220.2%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22322%22%20y%3D%22284%22%20width%3D%22114%22%20height%3D%2250%22%20rx%3D%2212%22%20fill%3D%22%230c1320%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2242%22%20y%3D%22296%22%20width%3D%22110%22%20height%3D%2252%22%20rx%3D%2212%22%20fill%3D%22%230c1320%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M0%20354%20C84%20332%20140%20326%20182%20340%20C222%20354%20248%20352%20292%20334%20C344%20312%20388%20308%20512%20328%22%20fill%3D%22none%22%20stroke%3D%22%237a8db3%22%20stroke-opacity%3D%220.16%22%20stroke-width%3D%225%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M0%20382%20C112%20348%20188%20342%20242%20356%20C298%20370%20362%20360%20512%20336%22%20fill%3D%22none%22%20stroke%3D%22%231dd8ff%22%20stroke-opacity%3D%220.12%22%20stroke-width%3D%223%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20transform%3D%22translate(336%20320)%22%3E%0A%20%20%20%20%3Cellipse%20cx%3D%220%22%20cy%3D%220%22%20rx%3D%2222%22%20ry%3D%2228%22%20fill%3D%22%230a0e14%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22-14%22%20y%3D%2218%22%20width%3D%2228%22%20height%3D%2258%22%20rx%3D%2212%22%20fill%3D%22%23090d12%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-18%2026%20L18%2026%20L34%2098%20L-34%2098%20Z%22%20fill%3D%22%2307090d%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-7%2020%20C-1%2012%201%2012%207%2020%22%20fill%3D%22none%22%20stroke%3D%22%23ff3d62%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.7%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-20%2014%20C-10%204%2010%204%2020%2014%22%20fill%3D%22none%22%20stroke%3D%22%232fd6ff%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.45%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.8%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2246%22%20cy%3D%22320%22%20r%3D%229%22%20fill%3D%22%23ff2d7a%22%20fill-opacity%3D%220.7%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2218%22%20y%3D%22316%22%20width%3D%2256%22%20height%3D%2210%22%20rx%3D%225%22%20fill%3D%22%23fefefe%22%20fill-opacity%3D%220.2%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.62%22%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%22406%22%20width%3D%22512%22%20height%3D%22106%22%20fill%3D%22%23090b12%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2258%22%20y%3D%22402%22%20width%3D%22156%22%20height%3D%2216%22%20rx%3D%228%22%20fill%3D%22%23ff48cf%22%20fill-opacity%3D%220.14%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22310%22%20y%3D%22418%22%20width%3D%22134%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%231ad5ff%22%20fill-opacity%3D%220.12%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E" alt="" />
+              <div class="ratio-chip">5:4</div>
+            </div>
+            <div class="chip-row">
+              <span class="mini-chip">&lt;/&gt; 默认</span>
+              <span class="mini-chip">完成</span>
+              <span class="mini-chip">深度 0</span>
+              <span class="mini-chip">层 2</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+      
+      <section class="card selected border-[#35c9ff]/70 shadow-[0_0_0_1px_rgba(53,201,255,0.46),0_24px_90px_rgba(0,0,0,0.45),0_0_44px_rgba(53,201,255,0.18)]">
+        <div class="card-header">
+          <div class="status-row">
+            <div class="checkbox checked">✓</div>
+            <div class="status-text">完成 / 默认 / <span>01:16</span></div>
+          </div>
+          <div class="title-row">
+            <div class="accent-bar"></div>
+            <div>
+              <div class="title">生成任务</div>
+              <div class="subtitle">gpt-image-2</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="rail">
+            <div class="label-row">
+              <span>PROMPT RAIL</span>
+              <span class="pill">无输入</span>
+            </div>
+            <div class="prompt">生成未来的赛博朋克的画面</div>
+            <div class="input-label">输入图</div>
+            <div class="empty-input">没有可追溯的输入图</div>
+            <div class="meta-grid">
+              <div class="meta-box">
+                <div class="meta-k">来源</div>
+                <div class="meta-v">gallery</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-k">输出数</div>
+                <div class="meta-v">1</div>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="matrix">
+            <div class="label-row">
+              <span>OUTPUT MATRIX</span>
+              <span class="pill">1 张输出</span>
+            </div>
+            <div class="thumb-wrap">
+              <div class="index-chip">1</div>
+              <img class="thumb" src="data:image/svg+xml;charset=UTF-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20shape-rendering%3D%22geometricPrecision%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20x2%3D%221%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230a1020%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2245%25%22%20stop-color%3D%22%2312102b%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2307080f%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22neonA%22%20x1%3D%220%22%20x2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23f44dff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%238f5cff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2323d6ff%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22neonB%22%20x1%3D%220%22%20x2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231ad5ff%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231a64ff%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22street%22%20x1%3D%220%22%20x2%3D%220%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%232e123f%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ff3ea7%22%20stop-opacity%3D%220.32%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22blur%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22160%25%22%3E%0A%20%20%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%2214%22%2F%3E%0A%20%20%20%20%3C%2Ffilter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22soft%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%20%20%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%0A%20%20%20%20%3C%2Ffilter%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22glass%22%20x1%3D%220%22%20x2%3D%220%22%20y1%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23eff5ff%22%20stop-opacity%3D%220.95%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23aebbe0%22%20stop-opacity%3D%220.65%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22url(%23bg)%22%2F%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%20filter%3D%22url(%23blur)%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22112%22%20cy%3D%22106%22%20r%3D%22100%22%20fill%3D%22%23ff49d1%22%20fill-opacity%3D%220.14%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22422%22%20cy%3D%22110%22%20r%3D%22118%22%20fill%3D%22%231ab4ff%22%20fill-opacity%3D%220.12%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22338%22%20cy%3D%22344%22%20r%3D%22116%22%20fill%3D%22%230f8bff%22%20fill-opacity%3D%220.12%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22134%22%20cy%3D%22346%22%20r%3D%2292%22%20fill%3D%22%23ff2d7a%22%20fill-opacity%3D%220.13%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.26%22%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%22372%22%20width%3D%22512%22%20height%3D%22140%22%20fill%3D%22url(%23street)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.04%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%3E%0A%20%20%20%20%3Crect%20x%3D%2260%22%20y%3D%22118%22%20width%3D%2236%22%20height%3D%22250%22%20rx%3D%228%22%20fill%3D%22%2307101f%22%20stroke%3D%22%232d8cff%22%20stroke-opacity%3D%220.22%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22112%22%20y%3D%2288%22%20width%3D%2254%22%20height%3D%22280%22%20rx%3D%2212%22%20fill%3D%22%2309111f%22%20stroke%3D%22%23ff58e6%22%20stroke-opacity%3D%220.18%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22180%22%20y%3D%22138%22%20width%3D%2266%22%20height%3D%22218%22%20rx%3D%2210%22%20fill%3D%22%2308101d%22%20stroke%3D%22%231fe1ff%22%20stroke-opacity%3D%220.18%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22264%22%20y%3D%22104%22%20width%3D%2238%22%20height%3D%22260%22%20rx%3D%228%22%20fill%3D%22%230c1321%22%20stroke%3D%22%23ff8a2b%22%20stroke-opacity%3D%220.14%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22320%22%20y%3D%22150%22%20width%3D%2262%22%20height%3D%22214%22%20rx%3D%2210%22%20fill%3D%22%230a1020%22%20stroke%3D%22%238f5cff%22%20stroke-opacity%3D%220.14%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.85%22%3E%0A%20%20%20%20%3Crect%20x%3D%22286%22%20y%3D%2250%22%20width%3D%22184%22%20height%3D%2288%22%20rx%3D%2214%22%20fill%3D%22%2312121d%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22300%22%20y%3D%2263%22%20width%3D%22156%22%20height%3D%2262%22%20rx%3D%2210%22%20fill%3D%22%23101726%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22348%22%20cy%3D%2288%22%20r%3D%2224%22%20fill%3D%22%23ff69e4%22%20fill-opacity%3D%220.8%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22350%22%20cy%3D%2284%22%20r%3D%2226%22%20fill%3D%22%2362d4ff%22%20fill-opacity%3D%220.48%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M320%20108%20C344%2078%20378%2078%20404%20108%22%20fill%3D%22none%22%20stroke%3D%22url(%23neonA)%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.9%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M326%20100%20C344%2090%20370%2090%20394%20100%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.76%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.88%22%3E%0A%20%20%20%20%3Crect%20x%3D%22352%22%20y%3D%22204%22%20width%3D%2258%22%20height%3D%2272%22%20rx%3D%2210%22%20fill%3D%22%230d1527%22%20stroke%3D%22%23ff49d1%22%20stroke-opacity%3D%220.2%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22428%22%20y%3D%22172%22%20width%3D%2240%22%20height%3D%22104%22%20rx%3D%2210%22%20fill%3D%22%2310192b%22%20stroke%3D%22%231ad5ff%22%20stroke-opacity%3D%220.2%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22322%22%20y%3D%22284%22%20width%3D%22114%22%20height%3D%2250%22%20rx%3D%2212%22%20fill%3D%22%230c1320%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2242%22%20y%3D%22296%22%20width%3D%22110%22%20height%3D%2252%22%20rx%3D%2212%22%20fill%3D%22%230c1320%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.06%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.9%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M0%20354%20C84%20332%20140%20326%20182%20340%20C222%20354%20248%20352%20292%20334%20C344%20312%20388%20308%20512%20328%22%20fill%3D%22none%22%20stroke%3D%22%237a8db3%22%20stroke-opacity%3D%220.16%22%20stroke-width%3D%225%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M0%20382%20C112%20348%20188%20342%20242%20356%20C298%20370%20362%20360%20512%20336%22%20fill%3D%22none%22%20stroke%3D%22%231dd8ff%22%20stroke-opacity%3D%220.12%22%20stroke-width%3D%223%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20transform%3D%22translate(74%20324)%22%3E%0A%20%20%20%20%3Cellipse%20cx%3D%220%22%20cy%3D%220%22%20rx%3D%2222%22%20ry%3D%2228%22%20fill%3D%22%230a0e14%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22-14%22%20y%3D%2218%22%20width%3D%2228%22%20height%3D%2258%22%20rx%3D%2212%22%20fill%3D%22%23090d12%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-18%2026%20L18%2026%20L34%2098%20L-34%2098%20Z%22%20fill%3D%22%2307090d%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-7%2020%20C-1%2012%201%2012%207%2020%22%20fill%3D%22none%22%20stroke%3D%22%23ff3d62%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.7%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M-20%2014%20C-10%204%2010%204%2020%2014%22%20fill%3D%22none%22%20stroke%3D%22%232fd6ff%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.45%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.8%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22320%22%20cy%3D%22320%22%20r%3D%229%22%20fill%3D%22%23ff2d7a%22%20fill-opacity%3D%220.7%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22292%22%20y%3D%22316%22%20width%3D%2256%22%20height%3D%2210%22%20rx%3D%225%22%20fill%3D%22%23fefefe%22%20fill-opacity%3D%220.2%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20opacity%3D%220.62%22%3E%0A%20%20%20%20%3Crect%20x%3D%220%22%20y%3D%22406%22%20width%3D%22512%22%20height%3D%22106%22%20fill%3D%22%23090b12%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2258%22%20y%3D%22402%22%20width%3D%22156%22%20height%3D%2216%22%20rx%3D%228%22%20fill%3D%22%23ff48cf%22%20fill-opacity%3D%220.14%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22310%22%20y%3D%22418%22%20width%3D%22134%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%231ad5ff%22%20fill-opacity%3D%220.12%22%20filter%3D%22url(%23soft)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E" alt="" />
+              <div class="ratio-chip">5:4</div>
+            </div>
+            <div class="chip-row">
+              <span class="mini-chip">&lt;/&gt; 默认</span>
+              <span class="mini-chip">完成</span>
+              <span class="mini-chip">深度 0</span>
+              <span class="mini-chip">层 1</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+    </div>
+    <div class="side-notch left"></div>
+    <div class="side-notch right"></div>
+    <div class="empty-space"></div>
+  </div>
+</body>
+</html>

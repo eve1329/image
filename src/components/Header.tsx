@@ -159,7 +159,7 @@ export default function Header() {
                     rel="noopener noreferrer"
                     className="hidden text-lg font-semibold tracking-tight text-[hsl(var(--workbench-ink))] transition-colors hover:text-white sm:inline"
                   >
-                    GPT Image Playground
+                    artworkers image
                   </a>
                 </>
               ) : (
@@ -169,7 +169,7 @@ export default function Header() {
                   rel="noopener noreferrer"
                   className="text-[17px] sm:text-lg font-semibold tracking-tight text-[hsl(var(--workbench-ink))] hover:text-white transition-colors"
                 >
-                  GPT Image Playground
+                  artworkers image
                 </a>
               )}
               {hasUpdate && latestRelease && (

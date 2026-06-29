@@ -129,80 +129,82 @@ export default function SearchBar() {
   }
 
   return (
-    <div ref={rootRef} data-no-drag-select className="mt-6 mb-4 flex gap-3">
-      <div className="flex gap-2 flex-shrink-0 z-20">
-        <SearchActionButton
-          tooltip={favoriteTooltip}
-          onClick={handleFavoriteClick}
-          className={`p-2.5 rounded-xl border transition-all ${
-            filterFavorite
-              ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-500'
-              : 'border-gray-200 dark:border-white/[0.08] bg-white dark:bg-gray-900 text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.06]'
-          }`}
-        >
-          {activeFavoriteCollectionId ? <ChevronLeftIcon className="w-5 h-5" /> : <FavoriteIcon filled={filterFavorite} className="w-5 h-5" />}
-        </SearchActionButton>
-        {inCollectionOverview && (
+    <div ref={rootRef} data-no-drag-select className="mt-6 mb-4">
+      <div className="workbench-panel rounded-[1.1rem] px-3 py-3">
+        <div className="flex flex-wrap items-center gap-2">
           <SearchActionButton
-            tooltip="管理收藏夹"
-            onClick={openManageCollectionsModal}
-            className="p-2.5 rounded-xl border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-gray-900 text-gray-400 hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-all"
+            tooltip={favoriteTooltip}
+            onClick={handleFavoriteClick}
+            className={`workbench-control inline-flex h-11 w-11 items-center justify-center rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${
+              filterFavorite
+                ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/15'
+                : 'text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]'
+            }`}
           >
-            <CollectionManageIcon className="w-5 h-5" />
+            {activeFavoriteCollectionId ? <ChevronLeftIcon className="w-5 h-5" /> : <FavoriteIcon filled={filterFavorite} className="w-5 h-5" />}
           </SearchActionButton>
-        )}
-        {!inCollectionOverview && (
-          <>
-            <div className="relative w-[88px]">
-              <Select
-                value={filterStatus}
-                onChange={handleStatusChange}
-                options={[
-                  { label: '全部', value: 'all' },
-                  { label: '已完成', value: 'done' },
-                  { label: '生成中', value: 'running' },
-                  { label: '失败', value: 'error' },
-                ]}
-                className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-white/[0.06] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
-              />
-            </div>
-            {isFailedFilter && (
-              <button
-                type="button"
-                onClick={handleClearFailed}
-                disabled={failedCount === 0}
-                title={failedCount > 0 ? `清除 ${failedCount} 条失败记录` : '没有失败记录'}
-                aria-label={failedCount > 0 ? `清除 ${failedCount} 条失败记录` : '没有失败记录'}
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-400 transition-all hover:bg-gray-50 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:bg-white disabled:hover:text-gray-400 dark:border-white/[0.08] dark:bg-gray-900 dark:text-gray-500 dark:hover:bg-white/[0.06] dark:hover:text-gray-300 dark:disabled:hover:bg-gray-900 dark:disabled:hover:text-gray-500"
-              >
-                <TrashIcon className="h-[18px] w-[18px]" />
-              </button>
-            )}
-          </>
-        )}
-      </div>
-      <div className="relative z-10 flex-1">
-        <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          {inCollectionOverview && (
+            <SearchActionButton
+              tooltip="管理收藏夹"
+              onClick={openManageCollectionsModal}
+              className="workbench-control inline-flex h-11 w-11 items-center justify-center rounded-xl text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+            >
+              <CollectionManageIcon className="w-5 h-5" />
+            </SearchActionButton>
+          )}
+          {!inCollectionOverview && (
+            <>
+              <div className="relative w-[92px]">
+                <Select
+                  value={filterStatus}
+                  onChange={handleStatusChange}
+                  options={[
+                    { label: '全部', value: 'all' },
+                    { label: '已完成', value: 'done' },
+                    { label: '生成中', value: 'running' },
+                    { label: '失败', value: 'error' },
+                  ]}
+                  className="workbench-control h-11 px-3 rounded-xl text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+                />
+              </div>
+              {isFailedFilter && (
+                <button
+                  type="button"
+                  onClick={handleClearFailed}
+                  disabled={failedCount === 0}
+                  title={failedCount > 0 ? `清除 ${failedCount} 条失败记录` : '没有失败记录'}
+                  aria-label={failedCount > 0 ? `清除 ${failedCount} 条失败记录` : '没有失败记录'}
+                  className="workbench-control flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[hsl(var(--workbench-muted))] transition-all hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-[hsl(var(--workbench-muted))]"
+                >
+                  <TrashIcon className="h-[18px] w-[18px]" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        <div className="relative z-10 mt-3">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--workbench-muted))]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            ref={inputRef}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            type="text"
+            placeholder={inCollectionOverview ? '搜索收藏夹名称...' : '搜索提示词、参数...'}
+            className="workbench-control h-11 w-full rounded-xl pl-10 pr-4 text-sm placeholder:text-[hsl(var(--workbench-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
           />
-        </svg>
-        <input
-          ref={inputRef}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          type="text"
-          placeholder={inCollectionOverview ? '搜索收藏夹名称...' : '搜索提示词、参数...'}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
-        />
+        </div>
       </div>
     </div>
   )

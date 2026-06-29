@@ -2,7 +2,7 @@
 
 ## Summary
 
-This redesign turns the current mixed UI into a single `Techno-Gothic 工作台` language.
+This redesign turns the current mixed UI into a single `Techno-Gothic 工作台` language, but the final reference image pushes the target toward a quieter analysis board: large dark group panels, compact text blocks, image tiles, and thin connector curves rather than a loud sci-fi console.
 
 The product already has a strong functional structure across `Gallery`, `Canvas`, and `Agent`, and `Canvas` already contains partial dark-mode / graph-workbench vocabulary. The problem is inconsistency: the canvas reads like a specialized workspace, while the rest of the app still reads like a conventional utility interface. This redesign keeps the structure intact and unifies the surfaces around one visual system.
 
@@ -10,14 +10,15 @@ The target mood is not “flashy sci-fi”. It is a dark, controlled, analysis-f
 
 ## Recommendation
 
-Use `方案 A / A1` as the design direction and treat the first implementation pass as scope `B`.
+Use `方案 A / A1` as the design direction.
 
 Assumption used for this spec:
 
 - The user objective explicitly reaffirmed `方案 A` as the intended direction.
-- Because no narrower scope was chosen after the recommendation, this spec assumes the default implementation scope is `B`.
+- The final reference image is the source of truth for the first implementation pass.
+- The first implementation pass should focus on the core board surfaces shown in the reference, not the secondary overlay set.
 
-Recommended scope `B`:
+Recommended scope:
 
 - Primary work surfaces:
   - `Header`
@@ -28,21 +29,21 @@ Recommended scope `B`:
   - `Gallery`
   - `Canvas`
   - `Agent`
-- Common overlays:
+- Deferred overlays:
   - `DetailModal`
   - `SettingsModal`
   - `Toast`
   - `ConfirmDialog`
 
-This gives the product a coherent workbench identity without expanding into secondary help/history/collection-management surfaces yet.
+This gives the product a coherent board identity without expanding into secondary overlays yet.
 
 ## Design Thesis
 
-The interface should feel like a night-shift control desk where every surface is part of one system, not a collection of independent pages. Hierarchy should come from panel structure, spacing, edge treatment, and restrained signal color, not from loud gradients or decorative effects.
+The interface should feel like a curated analysis board where every surface is part of one system, not a collection of independent pages. Hierarchy should come from panel structure, spacing, edge treatment, and restrained signal color, not from loud gradients or decorative effects.
 
 The single signature move is:
 
-`任务 / 节点以浮层卡片存在，并通过细关系线与系统状态高亮形成分析图感。`
+`任务 / 节点以大块暗灰分组板和紧凑文本卡存在，并通过极细关系线形成分析图感。`
 
 Canvas expresses that signature most strongly, while Gallery and Agent inherit the same language in flatter, more list-oriented forms.
 
@@ -99,10 +100,11 @@ This would create a strong hero surface, but it would also increase the visual g
 
 ### Core mood
 
-- Background: near-black, cold, slightly atmospheric, never flat black.
-- Surfaces: dark steel / slate panels with layered depth.
-- Accent: restrained `cyan / blue`, used sparingly.
+- Background: near-black and calm, never bright black.
+- Surfaces: dark charcoal / slate panels with very low sheen and shallow depth.
+- Accent: restrained `cyan / blue`, used only for selection, active focus, and the most important graph cues.
 - Status colors: remain semantic only, never decorative.
+- The image content should carry most of the visual life; the shell should stay quiet.
 
 ### Typography
 
@@ -149,10 +151,11 @@ Usage rules:
 
 ### Shape and depth
 
-- Large panels: rounded but not soft, approximately `20px` to `28px`
-- Small controls: `12px` to `18px`
+- Large panels: gently rounded, approximately `6px` to `12px`
+- Small controls: `4px` to `8px`
 - Borders: thin and cool, with slightly stronger emphasis on active surfaces
 - Depth: use shadow and subtle inner contrast, not blurry glass
+- Avoid soft pill shapes and inflated glassmorphism
 
 Panels should feel suspended, not inflated.
 
@@ -162,6 +165,7 @@ Panels should feel suspended, not inflated.
 - Small hover sheen or edge response on interactive panels
 - Clear focus ring on keyboard navigation
 - Respect `prefers-reduced-motion`
+- Keep animation minimal; the reference image feels mostly static and composed
 
 Motion should suggest system responsiveness, not entertainment.
 
@@ -169,12 +173,11 @@ Motion should suggest system responsiveness, not entertainment.
 
 ### Background
 
-The global shell should extend the canvas vocabulary across the entire app:
+The global shell should stay quiet and let the board dominate:
 
 - near-black base
-- faint grid field
-- low-intensity cyan / blue atmospheric bloom in a few controlled zones
-- occasional arc / line hints where the layout benefits from them
+- only the faintest surface texture or edge glow, if any
+- connector lines and node structure should be the visible pattern, not a decorative backdrop
 
 This background must remain subtle enough that content panels are always dominant.
 
@@ -188,13 +191,13 @@ All major surfaces should inherit the same construction rules:
 - mono micro-labels for system metadata
 - consistent spacing rhythm
 
-This turns the app into one workstation with multiple modes instead of multiple sub-products.
+This turns the app into one board system with multiple modes instead of multiple sub-products.
 
 ## Component Design
 
 ### Header
 
-Turn the header into a slim system control bar.
+Turn the header into a slim, quiet system control bar.
 
 Target traits:
 
@@ -212,7 +215,7 @@ Key changes:
 
 ### SearchBar
 
-Turn the search area into a filter console.
+Turn the search area into a quiet filter tray.
 
 Target traits:
 
@@ -229,7 +232,7 @@ Key changes:
 
 ### TaskCard
 
-Task cards should stop reading like generic result cards and start reading like analytical task units.
+Task cards should stop reading like generic result cards and start reading like analytical text units.
 
 Target traits:
 
@@ -258,7 +261,7 @@ Canvas is the strongest expression of the design system, but it should still fee
 
 ### InputBar
 
-The input bar should become the command dock of the workbench.
+The input bar should become a restrained command dock of the workbench.
 
 Target traits:
 
@@ -275,7 +278,7 @@ Key changes:
 
 ### TaskGrid / Gallery surface
 
-Gallery should behave like a flatter, browsable expression of the same node system.
+Gallery should behave like a flatter, browsable expression of the same board system.
 
 Key changes:
 
@@ -285,7 +288,7 @@ Key changes:
 
 ### AgentWorkspace
 
-Agent should look like the conversational wing of the same workbench.
+Agent should look like the conversational wing of the same board system.
 
 Key changes:
 
@@ -297,13 +300,9 @@ The result should feel like “analysis console with a copilot”, not “separa
 
 ### Common overlays
 
-For `DetailModal`, `SettingsModal`, `Toast`, and `ConfirmDialog`:
+Defer `DetailModal`, `SettingsModal`, `Toast`, and `ConfirmDialog` to a later pass.
 
-- use the same dark floating-shell treatment
-- unify panel radius, border contrast, and accent usage
-- keep form controls and toggles aligned with the main work surfaces
-
-These overlays should feel like workstation panels summoned above the main board, not default modal components.
+They should eventually reuse the same dark floating-shell treatment, but they are not part of the final reference image and should not shape the first implementation pass.
 
 ## Relationship Language
 
@@ -311,7 +310,7 @@ The signature move must appear in a disciplined way:
 
 - actual graph edges in `Canvas`
 - subtle relationship cues in Gallery and Agent
-- selection / focus using edge-like cyan traces and controlled active borders
+- selection / focus using thin edge-like traces and controlled active borders
 
 This relationship language should never overwhelm the content. It is there to create analytical structure, not ornament.
 
@@ -336,9 +335,9 @@ Recommended order:
 1. establish global dark tokens and shell background
 2. unify shared panel / control primitives
 3. restyle `Header`, `SearchBar`, and `InputBar`
-4. restyle `TaskCard` to match the workbench language
+4. restyle `TaskCard` to match the board language
 5. align `CanvasNode` and `CanvasWorkspace` with the shared tokens
-6. bring `AgentWorkspace` and the scope-`B` overlays into the same system
+6. bring `AgentWorkspace` and `TaskGrid / Gallery` into the same system
 
 This keeps the system coherent and avoids per-component one-off styling.
 
@@ -346,7 +345,7 @@ This keeps the system coherent and avoids per-component one-off styling.
 
 ### Main risks
 
-- overusing glow, blur, or accent, which would collapse the restrained workbench feel
+- overusing glow, blur, or accent, which would collapse the restrained board feel
 - making Gallery and Agent too visually dramatic, which would reduce readability
 - breaking spacing consistency by styling each component separately instead of promoting tokens
 
@@ -357,6 +356,7 @@ This keeps the system coherent and avoids per-component one-off styling.
 - no decorative purple / rainbow gradients
 - no random glassmorphism
 - Canvas remains the most graph-like mode, but not a different design language
+- keep the chrome quiet so the board remains the hero
 
 ## Definition Of Done
 
@@ -365,7 +365,8 @@ This stage is complete when:
 - the app reads as one coherent workbench across `Gallery`, `Canvas`, and `Agent`
 - `Header`, `SearchBar`, `TaskCard`, `CanvasNode`, and `InputBar` clearly share one visual system
 - `Canvas` is still the strongest expression of the graph / analysis-board identity
-- common overlays in scope `B` no longer feel stylistically detached
+- the board surfaces, section shells, and connector curves match the reference image's calm hierarchy
+- deferred overlays are explicitly outside this pass
 - the signature move is present but restrained
 - accessibility and reduced-motion behavior remain intact
 

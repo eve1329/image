@@ -422,7 +422,7 @@ function AtImageOptionThumb({ option }: { option: AtImageOption }) {
   }, [option])
 
   return (
-    <span className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.04]">
+    <span className="workbench-panel h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[hsl(var(--wb-line)/0.55)] bg-[hsl(var(--wb-surface-2)/0.9)]">
       {src && <img src={src} className="h-full w-full object-cover" alt="" />}
     </span>
   )
@@ -1580,7 +1580,7 @@ export default function InputBar() {
     }
   }, [])
 
-  const selectClass = 'px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-white/[0.06] text-xs transition-all duration-200 shadow-sm'
+  const selectClass = 'workbench-control px-3 py-1.5 rounded-xl text-xs'
 
   const getTouchDropIndex = (touch: React.Touch) => {
     const target = document
@@ -1807,16 +1807,16 @@ export default function InputBar() {
           text={imageHintText}
         />
         {showDropBefore && (
-          <div className="absolute -left-[5px] top-0 bottom-0 w-[2px] bg-blue-500 rounded-full z-40 shadow-sm pointer-events-none" />
+          <div className="absolute -left-[5px] top-0 bottom-0 w-[2px] bg-[hsl(var(--wb-accent))] rounded-full z-40 shadow-sm pointer-events-none" />
         )}
         {showDropAfter && (
-          <div className="absolute -right-[5px] top-0 bottom-0 w-[2px] bg-blue-500 rounded-full z-40 shadow-sm pointer-events-none" />
+          <div className="absolute -right-[5px] top-0 bottom-0 w-[2px] bg-[hsl(var(--wb-accent))] rounded-full z-40 shadow-sm pointer-events-none" />
         )}
         <div
           className={`relative w-[52px] h-[52px] rounded-xl overflow-hidden shadow-sm cursor-grab active:cursor-grabbing select-none ${
             isMaskTarget
-              ? 'border-2 border-blue-500'
-              : 'border border-gray-200 dark:border-white/[0.08]'
+              ? 'border-2 border-[hsl(var(--wb-accent))]'
+              : 'border border-[hsl(var(--wb-line)/0.55)] bg-[hsl(var(--wb-surface-2)/0.9)]'
           }`}
           onClick={() => {
             if (suppressImageClickRef.current) return
@@ -1841,7 +1841,7 @@ export default function InputBar() {
             </div>
           )}
           {isMaskTarget && (
-            <span className="absolute left-1 top-1 rounded bg-blue-500/90 px-1.5 py-0.5 text-[8px] leading-none text-white font-bold tracking-wider backdrop-blur-sm z-10 pointer-events-none">
+            <span className="absolute left-1 top-1 rounded bg-[hsl(var(--wb-accent)/0.9)] px-1.5 py-0.5 text-[8px] leading-none text-slate-950 font-bold tracking-wider backdrop-blur-sm z-10 pointer-events-none">
               MASK
             </span>
           )}
@@ -1891,7 +1891,7 @@ export default function InputBar() {
           action: () => clearInputImages(),
         })
       }
-      className="w-[52px] h-[52px] rounded-xl border border-dashed border-gray-300 dark:border-white/[0.08] flex flex-col items-center justify-center gap-0.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:border-red-300 hover:bg-red-50/50 dark:hover:bg-red-950/30 transition-all cursor-pointer flex-shrink-0"
+      className="workbench-control h-[52px] w-[52px] flex flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed text-[hsl(var(--wb-muted))] transition-all hover:border-rose-400/50 hover:text-rose-300 cursor-pointer flex-shrink-0"
       title={maskTargetImage ? '清空遮罩主图、参考图和遮罩' : '清空全部参考图'}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1932,18 +1932,18 @@ export default function InputBar() {
         onTouchCancel={sizeHint.hide}
         onClick={sizeHint.show}
       >
-        <span className="text-gray-400 dark:text-gray-500 ml-1">尺寸</span>
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">尺寸</span>
         <button
           type="button"
           onClick={() => { dismissAllTooltips(); setShowSizePicker(true) }}
-          className="px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-white/[0.06] focus:outline-none text-xs text-left transition-all duration-200 shadow-sm font-mono"
+          className="workbench-control rounded-xl px-3 py-1.5 text-left text-xs font-mono transition-all duration-200"
           title="选择尺寸"
         >
           {displaySize}
         </button>
         <ButtonTooltip
           visible={isFalTextToImage && sizeHint.visible}
-          text={<>fal.ai 的文生图模式不支持 <code className="rounded bg-white/10 px-1 py-0.5 font-mono">auto</code> 参数</>}
+          text={<>fal.ai 的文生图模式不支持 <code className="rounded bg-[hsl(var(--wb-surface-2)/0.8)] px-1 py-0.5 font-mono text-[hsl(var(--wb-ink))]">auto</code> 参数</>}
         />
       </label>
       <label
@@ -1955,7 +1955,7 @@ export default function InputBar() {
         onTouchCancel={qualityHint.hide}
         onClick={qualityHint.show}
       >
-        <span className="text-gray-400 dark:text-gray-500 ml-1">质量</span>
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">质量</span>
         <Select
           value={settings.codexCli ? 'auto' : isFalProvider && params.quality === 'auto' ? 'high' : params.quality}
           onChange={(val) => {
@@ -1964,16 +1964,16 @@ export default function InputBar() {
           options={qualityOptions}
           disabled={settings.codexCli}
           className={settings.codexCli
-            ? 'px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-gray-100/50 dark:bg-white/[0.05] opacity-50 cursor-not-allowed text-xs transition-all duration-200 shadow-sm'
+            ? 'workbench-control px-3 py-1.5 rounded-xl opacity-50 cursor-not-allowed text-xs transition-all duration-200 shadow-sm'
             : selectClass}
         />
         <ButtonTooltip
           visible={(settings.codexCli || isFalProvider) && qualityHint.visible}
-          text={isFalProvider ? <>fal.ai 不支持 <code className="rounded bg-white/10 px-1 py-0.5 font-mono">auto</code> 质量参数</> : 'Codex CLI 不支持质量参数'}
+          text={isFalProvider ? <>fal.ai 不支持 <code className="rounded bg-[hsl(var(--wb-surface-2)/0.8)] px-1 py-0.5 font-mono text-[hsl(var(--wb-ink))]">auto</code> 质量参数</> : 'Codex CLI 不支持质量参数'}
         />
       </label>
       <label className="flex flex-col gap-0.5">
-        <span className="text-gray-400 dark:text-gray-500 ml-1">格式</span>
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">格式</span>
         <Select
           value={params.output_format}
           onChange={(val) => {
@@ -2000,8 +2000,8 @@ export default function InputBar() {
           onTouchCancel={transparentOutputHint.hide}
           onClick={transparentOutputHint.show}
         >
-          <span className="text-gray-400 dark:text-gray-500 ml-1">透明背景</span>
-          <Select
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">透明背景</span>
+        <Select
             value={transparentOutputEnabled ? 'on' : 'off'}
             onChange={(val) => {
               if (!transparentOutputAvailable) return
@@ -2029,8 +2029,8 @@ export default function InputBar() {
           onTouchCancel={compressionHint.hide}
           onClick={compressionHint.show}
         >
-          <span className="text-gray-400 dark:text-gray-500 ml-1">压缩率</span>
-          <input
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">压缩率</span>
+        <input
             value={outputCompressionInput}
             onChange={(e) => setOutputCompressionInput(e.target.value)}
             onBlur={commitOutputCompression}
@@ -2039,10 +2039,10 @@ export default function InputBar() {
             min={0}
             max={100}
             placeholder="0-100"
-            className={`px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] focus:outline-none text-xs transition-all duration-200 shadow-sm ${
+            className={`workbench-control px-3 py-1.5 rounded-xl text-xs transition-all duration-200 shadow-sm ${
               compressionDisabled
-                ? 'bg-gray-100/50 dark:bg-white/[0.05] opacity-50 cursor-not-allowed'
-                : 'bg-white/50 dark:bg-white/[0.03]'
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
               }`}
           />
           <ButtonTooltip
@@ -2060,7 +2060,7 @@ export default function InputBar() {
         onTouchCancel={moderationHint.hide}
         onClick={moderationHint.show}
       >
-        <span className="text-gray-400 dark:text-gray-500 ml-1">审核</span>
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">审核</span>
         <Select
           value={moderationDisabled ? 'auto' : params.moderation}
           onChange={(val) => {
@@ -2072,7 +2072,7 @@ export default function InputBar() {
           ]}
           disabled={moderationDisabled}
           className={moderationDisabled
-            ? 'px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-gray-100/50 dark:bg-white/[0.05] opacity-50 cursor-not-allowed text-xs transition-all duration-200 shadow-sm'
+            ? 'workbench-control px-3 py-1.5 rounded-xl opacity-50 cursor-not-allowed text-xs transition-all duration-200 shadow-sm'
             : selectClass}
         />
         <ButtonTooltip
@@ -2092,7 +2092,7 @@ export default function InputBar() {
         }}
         onClick={showAgentNHint}
       >
-        <span className="text-gray-400 dark:text-gray-500 ml-1">数量</span>
+        <span className="ml-1 text-[hsl(var(--wb-muted))]">数量</span>
         <input
           value={nInput}
           onChange={(e) => handleNInputChange(e.target.value)}
@@ -2115,10 +2115,10 @@ export default function InputBar() {
           type={agentAutoImageCount ? 'text' : 'number'}
           min={agentAutoImageCount ? undefined : 1}
           max={agentAutoImageCount ? undefined : outputImageLimit}
-          className={`px-3 py-1.5 rounded-xl border border-gray-200/60 dark:border-white/[0.08] focus:outline-none text-xs transition-all duration-200 shadow-sm ${
+          className={`workbench-control px-3 py-1.5 rounded-xl text-xs transition-all duration-200 shadow-sm ${
             agentAutoImageCount
-              ? 'bg-gray-100/50 dark:bg-white/[0.05] opacity-50 cursor-not-allowed'
-              : 'bg-white/50 dark:bg-white/[0.03]'
+              ? 'opacity-50 cursor-not-allowed'
+              : ''
           }`}
         />
         <ButtonTooltip visible={nLimitHint.visible} text={nLimitHintText} />
@@ -2135,17 +2135,17 @@ export default function InputBar() {
     <>
       {/* 全屏拖拽遮罩 */}
       {isDragging && (
-        <div className="fixed inset-0 z-[100] bg-white/60 dark:bg-gray-900/60 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-[100] bg-black/48 backdrop-blur-md flex flex-col items-center justify-center pointer-events-none">
           <div className="flex flex-col items-center gap-4 p-8 rounded-3xl">
             <div className={`w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center ${
-              atImageLimit ? 'bg-red-50 dark:bg-red-500/10 border-red-300' : 'bg-blue-50 dark:bg-blue-500/10 border-blue-400'
+              atImageLimit ? 'bg-rose-500/10 border-rose-300' : 'bg-[hsl(var(--wb-accent)/0.1)] border-[hsl(var(--wb-accent)/0.55)]'
             }`}>
               {atImageLimit ? (
-                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
               ) : (
-                <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-[hsl(var(--wb-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               )}
@@ -2153,13 +2153,13 @@ export default function InputBar() {
             <div className="text-center">
               {atImageLimit ? (
                 <>
-                  <p className="text-lg font-semibold text-red-500">已达上限 {API_MAX_IMAGES} 张</p>
-                  <p className="text-sm text-gray-400 mt-1">请先移除部分参考图后再添加</p>
+                  <p className="text-lg font-semibold text-rose-300">已达上限 {API_MAX_IMAGES} 张</p>
+                  <p className="mt-1 text-sm text-[hsl(var(--wb-muted))]">请先移除部分参考图后再添加</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">释放以上传图片</p>
-                  <p className="text-sm text-gray-400 mt-1">支持 JPG、PNG、WebP 等格式</p>
+                  <p className="text-lg font-semibold text-[hsl(var(--wb-ink))]">释放以上传图片</p>
+                  <p className="mt-1 text-sm text-[hsl(var(--wb-muted))]">支持 JPG、PNG、WebP 等格式</p>
                 </>
               )}
             </div>
@@ -2178,21 +2178,21 @@ export default function InputBar() {
 
       <div data-input-bar className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 w-full max-w-4xl px-3 sm:px-4 transition-all duration-300">
         {showFavoriteCollectionBatchBar && (
-          <div className="flex justify-center mb-3">
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-lg rounded-full flex items-center p-1 border border-gray-200/50 dark:border-white/10 pointer-events-auto">
+          <div className="mb-3 flex justify-center">
+            <div className="workbench-panel flex items-center gap-1 rounded-full px-1.5 py-1 pointer-events-auto">
               <BatchActionButton
                 onClick={clearFavoriteCollectionSelection}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="rounded-full p-2 text-[hsl(var(--wb-muted))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="取消选择"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleSelectAllVisibleFavoriteCollections}
-                className="p-2 text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                className="rounded-full p-2 text-[hsl(var(--wb-accent))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="全选收藏夹"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -2202,7 +2202,7 @@ export default function InputBar() {
               </BatchActionButton>
               <BatchActionButton
                 onClick={handleInvertVisibleFavoriteCollections}
-                className="p-2 text-purple-500 dark:text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+                className="rounded-full p-2 text-violet-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="反选收藏夹"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -2210,20 +2210,20 @@ export default function InputBar() {
                   <path d="M8 12h8M13 9l3 3-3 3" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleDownloadSelectedFavoriteCollections}
-                className="p-2 text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                className="rounded-full p-2 text-emerald-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="下载选中"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleDeleteSelectedFavoriteCollections}
-                className="p-2 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                className="rounded-full p-2 text-rose-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="删除选中"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2234,21 +2234,21 @@ export default function InputBar() {
           </div>
         )}
         {showTaskBatchBar && (
-          <div className="flex justify-center mb-3">
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-lg rounded-full flex items-center p-1 border border-gray-200/50 dark:border-white/10 pointer-events-auto">
+          <div className="mb-3 flex justify-center">
+            <div className="workbench-panel flex items-center gap-1 rounded-full px-1.5 py-1 pointer-events-auto">
               <BatchActionButton
                 onClick={clearSelection}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="rounded-full p-2 text-[hsl(var(--wb-muted))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="取消选择"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleSelectAllVisibleTasks}
-                className="p-2 text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                className="rounded-full p-2 text-[hsl(var(--wb-accent))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="全选任务"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -2258,7 +2258,7 @@ export default function InputBar() {
               </BatchActionButton>
               <BatchActionButton
                 onClick={handleInvertVisibleTasks}
-                className="p-2 text-purple-500 dark:text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+                className="rounded-full p-2 text-violet-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="反选任务"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -2266,10 +2266,10 @@ export default function InputBar() {
                   <path d="M8 12h8M13 9l3 3-3 3" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleToggleFavorite}
-                className="p-2 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-300 transition-colors"
+                className="rounded-full p-2 text-amber-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="编辑收藏夹"
               >
                 {selectedTaskIds.length > 0 && selectedTaskIds.every((id) => tasks.find((t) => t.id === id)?.isFavorite) ? (
@@ -2282,20 +2282,20 @@ export default function InputBar() {
                   </svg>
                 )}
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleDownloadSelected}
-                className="p-2 text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                className="rounded-full p-2 text-emerald-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="下载选中"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </BatchActionButton>
-              <div className="w-px h-5 bg-gray-200 dark:bg-white/20 mx-1"></div>
+              <div className="mx-1 h-5 w-px bg-[hsl(var(--wb-line)/0.55)]" />
               <BatchActionButton
                 onClick={handleDeleteSelected}
-                className="p-2 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                className="rounded-full p-2 text-rose-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                 tooltip="删除选中"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2305,7 +2305,7 @@ export default function InputBar() {
             </div>
           </div>
         )}
-        <div ref={cardRef} className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border border-white/50 dark:border-white/[0.08] shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] rounded-2xl sm:rounded-3xl p-3 sm:p-4 ring-1 ring-black/5 dark:ring-white/10">
+        <div ref={cardRef} className="workbench-panel workbench-panel--strong rounded-[24px] p-3 sm:p-4">
           {/* 移动端拖动条 */}
           <div
             ref={handleRef}
@@ -2318,7 +2318,7 @@ export default function InputBar() {
               setMobileCollapsed((v) => !v)
             }}
           >
-            <div className={`w-10 h-1 rounded-full bg-gray-300 dark:bg-white/[0.06] transition-transform duration-200 ${mobileCollapsed ? 'scale-x-75' : ''}`} />
+            <div className={`h-1 w-10 rounded-full bg-[hsl(var(--wb-line)/0.7)] transition-transform duration-200 ${mobileCollapsed ? 'scale-x-75' : ''}`} />
           </div>
 
           {/* 输入图片行（移动端可折叠） */}
@@ -2331,7 +2331,7 @@ export default function InputBar() {
                   </div>
                 </div>
                 {mobileCollapsed && (
-                  <div className="text-xs text-gray-400 dark:text-gray-500 mb-2 ml-1">
+                  <div className="mb-2 ml-1 text-xs text-[hsl(var(--wb-muted))]">
                     {maskDraft ? `1 张遮罩主图 · ${referenceImages.length} 张参考图` : `${inputImages.length} 张参考图`}
                   </div>
                 )}
@@ -2344,8 +2344,8 @@ export default function InputBar() {
           {/* 输入框 */}
           <div className="relative grid">
             {showAtImageMenu && (
-              <div style={{ left: `${menuLeft}px` }} className="absolute bottom-full z-50 mb-2 w-64 overflow-hidden rounded-2xl border border-gray-200/70 bg-white/95 p-1.5 shadow-xl ring-1 ring-black/5 backdrop-blur-xl dark:border-white/[0.08] dark:bg-gray-900/95 dark:ring-white/10">
-                <div className="px-2 pb-1 pt-0.5 text-[11px] text-gray-400 dark:text-gray-500">选择图片引用</div>
+              <div style={{ left: `${menuLeft}px` }} className="workbench-panel absolute bottom-full z-50 mb-2 w-64 overflow-hidden rounded-[18px] p-1.5">
+                <div className="px-2 pb-1 pt-0.5 text-[11px] text-[hsl(var(--wb-muted))]">选择图片引用</div>
                 <div className="max-h-56 overflow-y-auto custom-scrollbar">
                   {atImageOptions.map((option, optionIndex) => (
                     <button
@@ -2358,13 +2358,13 @@ export default function InputBar() {
                       onMouseEnter={() => setAtImageMenuIndex(optionIndex)}
                       className={`flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left text-xs transition-colors ${
                         optionIndex === atImageMenuIndex
-                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'
-                          : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.06]'
+                          ? 'bg-[hsl(var(--wb-accent)/0.12)] text-[hsl(var(--wb-accent))]'
+                          : 'text-[hsl(var(--wb-ink)/0.86)] hover:bg-[hsl(var(--wb-accent)/0.08)]'
                         }`}
                     >
                       <AtImageOptionThumb option={option} />
                       <span className="min-w-0 flex-1 truncate font-medium">{option.label}</span>
-                      {option.type === 'agent-output' && <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-white/[0.06] dark:text-gray-400">历史</span>}
+                      {option.type === 'agent-output' && <span className="shrink-0 rounded-full border border-white/10 bg-[hsl(var(--wb-surface-2)/0.8)] px-1.5 py-0.5 text-[10px] text-[hsl(var(--wb-muted))]">历史</span>}
                     </button>
                   ))}
                 </div>
@@ -2415,10 +2415,10 @@ export default function InputBar() {
                 syncMentionTagSelection(el)
               }}
               aria-label={promptPlaceholder}
-              className="col-start-1 row-start-1 min-h-[42px] w-full overflow-hidden ios-rounded-scroll-fix whitespace-pre-wrap break-words rounded-2xl border border-gray-200/60 bg-white/50 pl-4 pr-10 py-3 text-sm leading-relaxed shadow-sm outline-none transition-[border-color,box-shadow] duration-200 focus:ring-1 focus:ring-blue-300/40 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-100 dark:focus:ring-blue-500/30"
+              className="workbench-control col-start-1 row-start-1 min-h-[42px] w-full overflow-hidden ios-rounded-scroll-fix whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-relaxed outline-none transition-[border-color,box-shadow] duration-200"
             />
             {prompt.length === 0 && (
-              <div className={`prompt-placeholder col-start-1 row-start-1 pointer-events-none pl-4 pr-10 py-3 text-sm leading-relaxed text-gray-400 dark:text-gray-500${
+              <div className={`prompt-placeholder col-start-1 row-start-1 pointer-events-none px-4 py-3 text-sm leading-relaxed text-[hsl(var(--wb-muted))]${
                 isMobile && mobileCollapsed ? ' truncate' : ''
               }`}>
                 {promptPlaceholder}
@@ -2428,7 +2428,7 @@ export default function InputBar() {
               <button
                 type="button"
                 onClick={handleClearPrompt}
-                className={`absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.08] rounded-full p-1 transition-all duration-200 focus:outline-none z-10 flex items-center justify-center ${
+                className={`absolute right-3 z-10 flex items-center justify-center rounded-full p-1 text-[hsl(var(--wb-muted))] transition-all duration-200 hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))] focus:outline-none ${
                   isSingleLine ? 'top-1/2 -translate-y-1/2' : 'top-3'
                 }`}
                 title="清空文本"
@@ -2453,10 +2453,8 @@ export default function InputBar() {
                   <ButtonTooltip visible={attachHover} text={uploadImageTooltipText} />
                   <button
                     onClick={() => !atImageLimit && fileInputRef.current?.click()}
-                    className={`p-2.5 rounded-xl transition-all shadow-sm ${
-                      atImageLimit
-                        ? 'bg-gray-200 dark:bg-white/[0.04] text-gray-300 dark:text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-200 dark:bg-white/[0.06] hover:bg-gray-300 dark:hover:bg-white/[0.1] text-gray-500 dark:text-gray-300 hover:shadow'
+                    className={`workbench-control p-2.5 rounded-xl ${
+                      atImageLimit ? 'opacity-45 cursor-not-allowed' : 'hover:border-[hsl(var(--wb-accent)/0.45)]'
                     }`}
                     aria-label={uploadImageTooltipText}
                   >
@@ -2474,12 +2472,12 @@ export default function InputBar() {
                   <button
                     onClick={() => activeAgentIsRunning ? stopActiveAgentResponse() : hasSubmitApiConfig ? submitCurrentMode() : setShowSettings(true)}
                     disabled={activeAgentIsRunning ? false : hasSubmitApiConfig ? !canSubmit : false}
-                    className={`p-2.5 rounded-xl transition-all shadow-sm hover:shadow ${
+                    className={`rounded-xl p-2.5 transition-all ${
                       activeAgentIsRunning
                         ? 'bg-red-500 text-white hover:bg-red-600'
                         : !hasSubmitApiConfig
-                        ? 'bg-gray-300 dark:bg-white/[0.06] text-white cursor-pointer'
-                        : 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed'
+                        ? 'workbench-control text-[hsl(var(--wb-ink))] cursor-pointer'
+                        : 'border border-[hsl(var(--wb-accent)/0.45)] bg-[hsl(var(--wb-accent))] text-slate-950 hover:bg-[hsl(var(--wb-accent)/0.88)] disabled:opacity-50 disabled:cursor-not-allowed'
                     }`}
                     aria-label={submitButtonAriaLabel}
                   >
@@ -2518,10 +2516,10 @@ export default function InputBar() {
                         setShowMobileUploadMenu(!showMobileUploadMenu)
                       }
                     }}
-                    className={`p-2.5 rounded-xl transition-all shadow-sm flex-shrink-0 ${
+                    className={`rounded-xl p-2.5 transition-all flex-shrink-0 ${
                       atImageLimit
-                        ? 'bg-gray-200 dark:bg-white/[0.04] text-gray-300 dark:text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-200 dark:bg-white/[0.06] hover:bg-gray-300 dark:hover:bg-white/[0.1] text-gray-500 dark:text-gray-300'
+                        ? 'workbench-control opacity-45 cursor-not-allowed'
+                        : 'workbench-control hover:border-[hsl(var(--wb-accent)/0.45)]'
                     }`}
                     aria-label={uploadImageTooltipText}
                   >
@@ -2542,9 +2540,9 @@ export default function InputBar() {
                         className="fixed inset-0 z-40"
                         onClick={() => setShowMobileUploadMenu(false)}
                       />
-                      <div className="absolute bottom-full left-0 mb-2 w-32 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                      <div className="workbench-panel absolute bottom-full left-0 z-50 mb-2 w-32 overflow-hidden rounded-[18px] animate-in fade-in slide-in-from-bottom-2 duration-200">
                         <button
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors"
+                          className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-[hsl(var(--wb-ink)/0.9)] transition-colors hover:bg-[hsl(var(--wb-accent)/0.08)]"
                           onClick={() => {
                             setShowMobileUploadMenu(false)
                             cameraInputRef.current?.click()
@@ -2557,7 +2555,7 @@ export default function InputBar() {
                           拍照
                         </button>
                         <button
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors"
+                          className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-[hsl(var(--wb-ink)/0.9)] transition-colors hover:bg-[hsl(var(--wb-accent)/0.08)]"
                           onClick={() => {
                             setShowMobileUploadMenu(false)
                             fileInputRef.current?.click()
@@ -2582,12 +2580,12 @@ export default function InputBar() {
                     onClick={() => activeAgentIsRunning ? stopActiveAgentResponse() : hasSubmitApiConfig ? submitCurrentMode() : setShowSettings(true)}
                     disabled={activeAgentIsRunning ? false : hasSubmitApiConfig ? !canSubmit : false}
                     aria-label={submitButtonAriaLabel}
-                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all ${
                       activeAgentIsRunning
                         ? 'bg-red-500 text-white hover:bg-red-600'
                         : !hasSubmitApiConfig
-                        ? 'bg-gray-300 dark:bg-white/[0.06] text-white cursor-pointer'
-                        : 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-white/[0.04] disabled:opacity-50 disabled:cursor-not-allowed'
+                        ? 'workbench-control text-[hsl(var(--wb-ink))] cursor-pointer'
+                        : 'border border-[hsl(var(--wb-accent)/0.45)] bg-[hsl(var(--wb-accent))] text-slate-950 hover:bg-[hsl(var(--wb-accent)/0.88)] disabled:opacity-50 disabled:cursor-not-allowed'
                     }`}
                   >
                     {activeAgentIsRunning ? (

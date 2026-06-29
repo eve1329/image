@@ -254,13 +254,13 @@ export default function TaskGrid() {
 
   if (!filteredTasks.length) {
     return (
-      <div className="text-center py-20 text-gray-400 dark:text-gray-500">
+      <div className="workbench-panel mx-auto max-w-xl rounded-[18px] px-6 py-14 text-center text-[hsl(var(--wb-muted))]">
         {searchQuery || filterFavorite ? (
           <p className="text-sm">没有找到匹配的任务</p>
         ) : (
           <>
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-200 dark:text-gray-700"
+              className="mx-auto mb-4 h-16 w-16 text-[hsl(var(--wb-line)/0.68)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -280,12 +280,12 @@ export default function TaskGrid() {
   }
 
   return (
-    <div 
+    <div
       ref={rootRef}
       data-task-grid-root
-      className="relative min-h-[50vh]"
+      className="relative min-h-[50vh] pb-2"
     >
-      <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+      <div ref={gridRef} className="grid grid-cols-1 gap-4 pb-12 sm:grid-cols-2 lg:grid-cols-3">
         {filteredTasks.map((task) => (
           <div key={task.id} className="task-card-wrapper" data-task-id={task.id}>
             <TaskCard
@@ -314,7 +314,7 @@ export default function TaskGrid() {
       </div>
       {selectionBox && (
         <div
-          className="fixed bg-blue-500/20 border border-blue-500/50 pointer-events-none z-[30]"
+          className="fixed z-[30] pointer-events-none rounded-sm border border-[hsl(var(--wb-accent)/0.55)] bg-[hsl(var(--wb-accent)/0.12)] backdrop-blur-[2px]"
           style={{
             left: Math.min(selectionBox.startPageX, selectionBox.currentPageX) - window.scrollX,
             top: Math.min(selectionBox.startPageY, selectionBox.currentPageY) - window.scrollY,

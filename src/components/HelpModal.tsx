@@ -24,6 +24,7 @@ export default function HelpModal({ appMode, isFavoriteCollectionOverview = fals
   const isMobile = useIsMobile()
   const modalRef = useRef<HTMLDivElement>(null)
   const isAgentMode = appMode === 'agent'
+  const isCanvasMode = appMode === 'canvas'
   useCloseOnEscape(true, onClose)
   usePreventBackgroundScroll(true, modalRef)
 
@@ -72,6 +73,27 @@ export default function HelpModal({ appMode, isFavoriteCollectionOverview = fals
                     <li>输入 <strong className="text-blue-500 dark:text-blue-400 font-medium">@</strong> 可引用参考图或前面轮次生成的图片；Agent 也会自行参考上下文中的图片。</li>
                     <li>编辑某轮消息重新发送，或重新生成某轮消息，会产生可切换的分支。</li>
                     <li>生成的图片会同步到画廊；删除对话默认不会删除画廊中的任务。</li>
+                  </ul>
+                </div>
+              </section>
+            </>
+          ) : isCanvasMode ? (
+            <>
+              <section>
+                <h4 className="mb-4 text-sm font-medium text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                  </svg>
+                  Canvas 视图
+                </h4>
+                <div className="space-y-4">
+                  <ul className="list-disc pl-4 space-y-2">
+                    <li>拖拽任务节点可手工排布，位置只保存在当前浏览器。</li>
+                    <li>在画布空白处拖拽平移，滚轮或触控板双指缩放。</li>
+                    <li>每个任务块左侧是提示词，右侧是输出缩略图矩阵。</li>
+                    <li>点击任务块可查看详情，现有历史、收藏和 Agent 入口保持不变。</li>
+                    <li><strong className="text-blue-500 dark:text-blue-400 font-medium">Reset layout</strong> 会清空本地位置覆盖层，回到自动谱系布局。</li>
+                    <li>画布不会改动任务内容、边关系或后端数据，也不支持手动连线。</li>
                   </ul>
                 </div>
               </section>

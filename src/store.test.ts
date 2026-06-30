@@ -227,6 +227,48 @@ describe('favorite collection deletion', () => {
   })
 })
 
+describe('task selection invariants', () => {
+  beforeEach(() => {
+    useStore.setState({
+      tasks: [],
+      selectedTaskIds: [],
+    })
+  })
+
+  it('dedupes and prunes selected ids against current tasks', () => {
+    const first = task({ id: 'task-1' })
+    const second = task({ id: 'task-2' })
+    useStore.setState({ tasks: [first, second] })
+
+    useStore.getState().setSelectedTaskIds(['task-2', 'missing-task', 'task-1', 'task-2'])
+
+    expect(useStore.getState().selectedTaskIds).toEqual(['task-2', 'task-1'])
+  })
+
+  it('prunes selection when the task list changes', () => {
+    const first = task({ id: 'task-1' })
+    const second = task({ id: 'task-2' })
+    const third = task({ id: 'task-3' })
+    useStore.setState({
+      tasks: [first, second, third],
+      selectedTaskIds: ['task-3', 'task-1'],
+    })
+
+    useStore.getState().setTasks([second, third])
+
+    expect(useStore.getState().selectedTaskIds).toEqual(['task-3'])
+  })
+
+  it('ignores attempts to select tasks that are no longer present', () => {
+    const first = task({ id: 'task-1' })
+    useStore.setState({ tasks: [first] })
+
+    useStore.getState().toggleTaskSelection('missing-task', true)
+
+    expect(useStore.getState().selectedTaskIds).toEqual([])
+  })
+})
+
 describe('mask draft lifecycle in store actions', () => {
   beforeEach(() => {
     useStore.setState({
@@ -1203,6 +1245,52 @@ describe('agent draft lifecycle', () => {
     expect(state.appMode).toBe('gallery')
     expect(state.prompt).toBe(galleryPrompt)
     expect(state.inputImages).toEqual([imageB])
+  })
+
+  it('accepts canvas mode without breaking gallery and agent mode switching', () => {
+    useStore.getState().setAppMode('canvas')
+    expect(useStore.getState().appMode).toBe('canvas')
+    useStore.getState().setAppMode('gallery')
+    expect(useStore.getState().appMode).toBe('gallery')
+    useStore.getState().setAppMode('agent')
+    expect(useStore.getState().appMode).toBe('agent')
+  })
+
+  it('preserves draft state while switching through canvas mode', () => {
+    useStore.setState({
+      settings: normalizeSettings({
+        ...DEFAULT_SETTINGS,
+        profiles: [responsesProfile],
+        activeProfileId: responsesProfile.id,
+      }),
+      appMode: 'gallery',
+      prompt: 'gallery draft',
+      inputImages: [imageB],
+      maskDraft: null,
+      maskEditorImageId: null,
+      galleryInputDraft: null,
+      agentConversations: [agentConversation({ id: 'conversation-a' })],
+      activeAgentConversationId: 'conversation-a',
+      agentInputDrafts: {
+        'conversation-a': {
+          prompt: 'agent draft',
+          inputImages: [imageA],
+          maskDraft: null,
+          maskEditorImageId: null,
+        },
+      },
+    })
+
+    useStore.getState().setAppMode('canvas')
+    expect(useStore.getState().appMode).toBe('canvas')
+    expect(useStore.getState().prompt).toBe('gallery draft')
+
+    useStore.getState().setAppMode('gallery')
+    expect(useStore.getState().prompt).toBe('gallery draft')
+
+    useStore.getState().setAppMode('agent')
+    expect(useStore.getState().appMode).toBe('agent')
+    expect(useStore.getState().prompt).toBe('agent draft')
   })
 
   it('persists the gallery draft while agent mode is active', () => {

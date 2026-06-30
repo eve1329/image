@@ -34,6 +34,16 @@ export interface CallApiResult {
   rawImageUrls?: string[]
   /** 并发多图请求中失败的单张请求 */
   failedRequests?: Array<{ requestIndex: number; error: string }>
+  /** 视频相关数据 */
+  videos?: Array<{
+    dataUrl: string
+    thumbnailDataUrl: string
+    duration: number
+    width: number
+    height: number
+    aspectRatio: string
+    url?: string
+  }>
 }
 
 export function isHttpUrl(value: unknown): value is string {

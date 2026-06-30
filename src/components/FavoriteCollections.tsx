@@ -124,8 +124,8 @@ function CoverThumbnail({ task }: { task?: TaskRecord }) {
 
   if (src) return <img src={src} alt="" className="h-full w-full object-cover" />
   return (
-    <div className="flex h-full w-full items-center justify-center bg-yellow-50 text-yellow-500 dark:bg-[#2a2211] dark:text-yellow-500">
-      <FavoriteIcon filled className="h-8 w-8 opacity-80" />
+    <div className="flex h-full w-full items-center justify-center bg-[hsl(var(--wb-surface-2)/0.92)] text-[hsl(var(--wb-muted))]">
+      <FavoriteIcon filled className="h-8 w-8 text-amber-300/80" />
     </div>
   )
 }
@@ -286,13 +286,13 @@ function FavoriteCollectionOverviewCard({
   const showSwipeAction = swipeActionActive
   const swipeBgClass = showSwipeAction
     ? swipeStartedSelected
-      ? 'bg-gray-500 dark:bg-gray-600'
-      : 'bg-blue-500'
-    : 'bg-gray-200 dark:bg-gray-700'
+      ? 'bg-[hsl(var(--wb-line-strong)/0.78)]'
+      : 'bg-[hsl(var(--wb-accent)/0.78)]'
+    : 'bg-[hsl(var(--wb-surface-3)/0.9)]'
 
   return (
-    <div className="relative rounded-xl">
-      <div className={`absolute inset-0 rounded-xl flex items-center transition-opacity duration-200 pointer-events-none ${isSwiping || swipeDirection !== 0 || swipeActionActive ? 'opacity-100' : 'opacity-0'} ${swipeBgClass} ${swipeDirection > 0 ? 'justify-start pl-6' : 'justify-end pr-6'}`}>
+    <div className="relative rounded-[18px]">
+      <div className={`absolute inset-0 flex items-center rounded-[18px] transition-opacity duration-200 pointer-events-none ${isSwiping || swipeDirection !== 0 || swipeActionActive ? 'opacity-100' : 'opacity-0'} ${swipeBgClass} ${swipeDirection > 0 ? 'justify-start pl-6' : 'justify-end pr-6'}`}>
         <svg className={`w-8 h-8 transition-transform duration-150 ${showSwipeAction ? 'scale-110 text-white' : 'scale-90 text-white/60'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           {swipeStartedSelected && showSwipeAction ? (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -303,7 +303,7 @@ function FavoriteCollectionOverviewCard({
       </div>
       <article
         ref={cardRef}
-        className={`relative bg-white dark:bg-gray-900 rounded-xl border overflow-hidden cursor-pointer touch-pan-y will-change-transform duration-200 hover:shadow-lg dark:hover:bg-gray-800/80 ${!isSwiping ? 'transition-[box-shadow,border-color,background-color,transform]' : 'transition-[box-shadow,border-color,background-color]'} ${isSelected ? 'border-blue-500 shadow-md ring-2 ring-blue-500/50' : 'border-gray-200 dark:border-white/[0.08] hover:border-gray-300 dark:hover:border-white/[0.18]'}`}
+        className={`workbench-panel relative overflow-hidden rounded-[18px] border cursor-pointer touch-pan-y will-change-transform duration-200 ${!isSwiping ? 'transition-[box-shadow,border-color,background-color,transform]' : 'transition-[box-shadow,border-color,background-color]'} ${isSelected ? 'workbench-panel--strong ring-1 ring-[hsl(var(--wb-accent)/0.24)]' : 'hover:border-[hsl(var(--wb-line-strong)/0.86)]'} ${isSwiping ? '!bg-[hsl(var(--wb-surface)/0.96)]' : ''}`}
         onClick={(e) => {
           if (Date.now() < suppressClickUntilRef.current || Date.now() < suppressSwipeClickUntilRef.current) {
             e.preventDefault()
@@ -324,17 +324,17 @@ function FavoriteCollectionOverviewCard({
         onTouchCancel={resetSwipe}
       >
         <div className="flex h-40">
-          <div className="w-40 min-w-[10rem] h-full bg-gray-100 dark:bg-black/20 relative flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="relative flex h-full w-40 min-w-[10rem] flex-shrink-0 items-center justify-center overflow-hidden border-r border-[hsl(var(--wb-line)/0.5)] bg-[hsl(var(--wb-surface-2)/0.92)]">
             <CoverThumbnail task={coverTask} />
           </div>
-          <div className="flex-1 p-3 flex flex-col min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col p-4">
             <div className="flex-1 min-h-0 mb-2 overflow-hidden">
-              <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
-                {isVirtualAll ? <FavoriteIcon filled className="h-4 w-4 shrink-0 text-yellow-500" /> : <FolderIcon className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-400" />}
+              <div className="mb-2 flex items-center gap-2 text-sm font-bold text-[hsl(var(--wb-ink))]">
+                {isVirtualAll ? <FavoriteIcon filled className="h-4 w-4 shrink-0 text-amber-300" /> : <FolderIcon className="h-4 w-4 shrink-0 text-[hsl(var(--wb-muted))]" />}
                 {editingId === card.id ? (
                   <input
                     type="text"
-                    className="h-6 min-w-0 flex-1 rounded border border-blue-400/50 bg-white px-1.5 py-0 text-[14px] leading-6 text-gray-900 shadow-sm outline-none focus:border-blue-500 dark:border-white/20 dark:bg-black/20 dark:text-white dark:focus:border-white/40"
+                    className="workbench-control h-6 min-w-0 flex-1 rounded-[10px] px-1.5 py-0 text-[14px] leading-6"
                     value={editingName}
                     onChange={(e) => setEditingName(e.target.value)}
                     onKeyDown={handleRenameKeyDown}
@@ -346,7 +346,7 @@ function FavoriteCollectionOverviewCard({
                   <span className="truncate" title={card.name}>{card.name}</span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{card.tasks.length} 条任务</p>
+              <p className="mt-2 text-xs text-[hsl(var(--wb-muted))]">{card.tasks.length} 条任务</p>
             </div>
             <div className="mt-auto flex items-center justify-end gap-1">
               {!isVirtualAll && card.collection && (
@@ -357,7 +357,7 @@ function FavoriteCollectionOverviewCard({
                       e.stopPropagation()
                       handleSetDefault(card.collection!)
                     }}
-                    className={`p-1.5 rounded-md transition ${isDefault ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10' : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10'}`}
+                    className={`rounded-md p-1.5 transition hover:bg-[hsl(var(--wb-accent)/0.12)] ${isDefault ? 'text-amber-300' : 'text-[hsl(var(--wb-muted))] hover:text-amber-300'}`}
                   >
                     <FavoriteIcon filled={isDefault} className="w-4 h-4" />
                   </FavoriteActionButton>
@@ -369,7 +369,7 @@ function FavoriteCollectionOverviewCard({
                         e.stopPropagation()
                         confirmRename()
                       }}
-                      className="p-1.5 rounded-md hover:bg-green-50 dark:hover:bg-green-950/30 text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300 transition"
+                      className="rounded-md p-1.5 text-emerald-300 transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -379,7 +379,7 @@ function FavoriteCollectionOverviewCard({
                     <FavoriteActionButton
                       tooltip="编辑名称"
                       onClick={(e) => startRename(e, card.collection!)}
-                      className="p-1.5 rounded-md hover:bg-green-50 dark:hover:bg-green-950/30 text-gray-400 hover:text-green-500 transition"
+                      className="rounded-md p-1.5 text-[hsl(var(--wb-muted))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-emerald-300"
                     >
                       <EditIcon className="w-4 h-4" />
                     </FavoriteActionButton>
@@ -391,7 +391,7 @@ function FavoriteCollectionOverviewCard({
                       e.stopPropagation()
                       handleDelete(card.collection!, card.tasks)
                     }}
-                    className={`p-1.5 rounded-md transition ${canDelete ? 'hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-500' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}
+                    className={`rounded-md p-1.5 transition hover:bg-[hsl(var(--wb-accent)/0.12)] ${canDelete ? 'text-[hsl(var(--wb-muted))] hover:text-rose-300' : 'text-[hsl(var(--wb-muted)/0.45)] cursor-not-allowed'}`}
                   >
                     <TrashIcon className="w-4 h-4" />
                   </FavoriteActionButton>
@@ -516,12 +516,12 @@ export function FavoriteCollectionsView() {
   return (
     <div data-favorite-collections-root className="relative min-h-[50vh]">
       {filteredCards.length === 0 ? (
-        <div className="py-32 text-center text-gray-400 dark:text-gray-500">
-          <FavoriteIcon className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+        <div className="workbench-panel mx-auto max-w-xl rounded-[18px] px-6 py-14 text-center text-[hsl(var(--wb-muted))]">
+          <FavoriteIcon className="mx-auto mb-4 h-12 w-12 text-[hsl(var(--wb-line)/0.72)]" />
           <p className="text-sm">{cards.length === 0 ? '还没有收藏的图片' : '没有找到匹配的收藏夹'}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-10">
+        <div className="grid grid-cols-1 gap-4 pb-12 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCards.map((card) => {
             const coverTask = getLatestCoverTask(card.tasks)
             const isVirtualAll = card.id === ALL_FAVORITES_COLLECTION_ID
@@ -559,7 +559,7 @@ export function FavoriteCollectionsView() {
       )}
       {selectionBox && (
         <div
-          className="fixed bg-blue-500/20 border border-blue-500/50 pointer-events-none z-[30]"
+          className="fixed z-[30] pointer-events-none rounded-sm border border-[hsl(var(--wb-accent)/0.55)] bg-[hsl(var(--wb-accent)/0.12)] backdrop-blur-[2px]"
           style={{
             left: Math.min(selectionBox.startPageX, selectionBox.currentPageX) - window.scrollX,
             top: Math.min(selectionBox.startPageY, selectionBox.currentPageY) - window.scrollY,
@@ -869,30 +869,30 @@ export function FavoriteCollectionPickerModal() {
   return createPortal(
     <div data-no-drag-select className="fixed inset-0 z-[105] flex items-center justify-center p-4 sm:p-0" onClick={closePicker}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-overlay-in" />
-      <div ref={modalRef} className="relative z-10 flex max-h-[85vh] w-full max-w-[400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200 dark:border-[#333] dark:bg-[#1c1c1e] animate-modal-in" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 pt-6 pb-4 shrink-0 relative border-b border-gray-100 dark:border-[#333]">
-          <FavoriteActionButton tooltip="关闭" onClick={closePicker} wrapperClassName="absolute right-5 top-5 inline-flex" className="shrink-0 rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/[0.06] dark:hover:text-gray-200">
+      <div ref={modalRef} className="workbench-panel relative z-10 flex max-h-[85vh] w-full max-w-[400px] flex-col overflow-hidden rounded-[22px] animate-modal-in" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 pt-6 pb-4 shrink-0 relative border-b border-[hsl(var(--wb-line)/0.55)]">
+          <FavoriteActionButton tooltip="关闭" onClick={closePicker} wrapperClassName="absolute right-5 top-5 inline-flex" className="shrink-0 rounded-full p-1.5 text-[hsl(var(--wb-muted))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]">
             <CloseIcon className="h-5 w-5" />
           </FavoriteActionButton>
-          <h2 className="mb-2 pr-8 flex items-center gap-2.5 text-lg font-semibold text-gray-800 dark:text-gray-100 leading-snug">
-            <FavoriteIcon filled className="h-5 w-5 shrink-0 text-yellow-500" />
+          <h2 className="mb-2 pr-8 flex items-center gap-2.5 text-lg font-semibold text-[hsl(var(--wb-ink))] leading-snug">
+            <FavoriteIcon filled className="h-5 w-5 shrink-0 text-amber-300" />
             保存到收藏夹
           </h2>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-[13px] text-[hsl(var(--wb-muted))] leading-relaxed">
             取消勾选会将任务从对应的收藏夹中移除。
           </p>
         </div>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5 px-6 shrink-0">
-            <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">选择要保存的收藏夹</span>
+            <span className="text-[13px] font-medium text-[hsl(var(--wb-muted))]">选择要保存的收藏夹</span>
             <div className="flex gap-4">
-              <button type="button" onClick={() => setCheckedIds(selectableCollections.map((collection) => collection.id))} className="text-[13px] font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">全选</button>
-              <button type="button" onClick={() => setCheckedIds([])} className="text-[13px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors">取消</button>
+              <button type="button" onClick={() => setCheckedIds(selectableCollections.map((collection) => collection.id))} className="text-[13px] font-medium text-[hsl(var(--wb-accent))] transition-colors hover:text-[hsl(var(--wb-ink))]">全选</button>
+              <button type="button" onClick={() => setCheckedIds([])} className="text-[13px] font-medium text-[hsl(var(--wb-muted))] transition-colors hover:text-[hsl(var(--wb-ink))]">取消</button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar relative">
             {selectableCollections.length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">暂无收藏夹</div>
+              <div className="py-8 text-center text-sm text-[hsl(var(--wb-muted))]">暂无收藏夹</div>
             ) : selectableCollections.map((collection) => {
               const isDefault = collection.id === defaultFavoriteCollectionId
               const canDelete = collections.length > 1
@@ -913,21 +913,21 @@ export function FavoriteCollectionPickerModal() {
                   toggleChecked(collection.id, !checkedIds.includes(collection.id))
                 }}
                 className={`group relative flex items-center justify-between transition-colors ${
-                  draggedId === collection.id ? 'opacity-40 bg-gray-100 dark:bg-white/[0.04]' : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                  draggedId === collection.id ? 'opacity-40 bg-[hsl(var(--wb-accent)/0.08)]' : 'hover:bg-[hsl(var(--wb-accent)/0.06)]'
                 }`}
                 onDragOver={(e) => handleDragOver(e, collection.id)}
                 onDrop={(e) => handleDrop(e, collection.id)}
               >
                 {dragOverId === collection.id && dragDropPosition === 'before' && draggedId !== collection.id && (
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500 z-40 pointer-events-none" />
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-[hsl(var(--wb-accent))] z-40 pointer-events-none" />
                 )}
                 {dragOverId === collection.id && dragDropPosition === 'after' && draggedId !== collection.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 z-40 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[hsl(var(--wb-accent))] z-40 pointer-events-none" />
                 )}
                 <div className="flex h-12 cursor-pointer items-center flex-1 min-w-0 gap-3 pl-4 pr-3">
                   <div 
                     data-drag-handle
-                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-gray-400 opacity-60 transition-opacity hover:opacity-100 dark:text-gray-500 shrink-0"
+                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-[hsl(var(--wb-muted))] opacity-60 transition-opacity hover:opacity-100 shrink-0"
                     style={{ touchAction: 'none' }}
                   >
                     <DragHandleIcon className="h-3.5 w-3.5" />
@@ -942,7 +942,7 @@ export function FavoriteCollectionPickerModal() {
                   {editingId === collection.id ? (
                     <input
                       type="text"
-                      className="h-6 min-w-0 flex-1 rounded border border-blue-400/50 bg-white px-1.5 py-0 text-[15px] leading-6 text-gray-900 shadow-sm outline-none focus:border-blue-500 dark:border-white/20 dark:bg-black/20 dark:text-white dark:focus:border-white/40"
+                      className="workbench-control h-6 min-w-0 flex-1 rounded-[10px] px-1.5 py-0 text-[15px] leading-6"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
                       onKeyDown={handleRenameKeyDown}
@@ -951,7 +951,7 @@ export function FavoriteCollectionPickerModal() {
                       onBlur={confirmRename}
                     />
                   ) : (
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-gray-700 dark:text-gray-200" title={collection.name}>{collection.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[hsl(var(--wb-ink))]" title={collection.name}>{collection.name}</span>
                   )}
                 </div>
                 <div className={`flex shrink-0 items-center justify-end gap-2 overflow-hidden pr-4 transition-all duration-150 ${editingId === collection.id ? 'w-12' : 'w-28'}`}>
@@ -963,7 +963,7 @@ export function FavoriteCollectionPickerModal() {
                           e.stopPropagation()
                           confirmRename()
                         }}
-                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                        className="rounded-md p-1.5 text-emerald-300 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -971,9 +971,9 @@ export function FavoriteCollectionPickerModal() {
                       </FavoriteActionButton>
                     ) : (
                       <>
-                        <FavoriteActionButton tooltip={isDefault ? '取消默认收藏夹' : '设为默认收藏夹'} onClick={(e) => handleSetDefault(e, collection)} className={`p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors ${isDefault ? 'text-yellow-500 dark:text-yellow-400' : 'text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400'}`}><FavoriteIcon filled={isDefault} className="w-3.5 h-3.5" /></FavoriteActionButton>
-                        <FavoriteActionButton tooltip="重命名" onClick={(e) => startRename(e, collection)} className="p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"><EditIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
-                        <FavoriteActionButton tooltip={canDelete ? '删除' : '至少保留一个收藏夹'} disabled={!canDelete} onClick={(e) => handleDelete(e, collection)} className={`p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors ${canDelete ? 'text-gray-400 hover:text-red-500 dark:hover:text-red-400' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}><TrashIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip={isDefault ? '取消默认收藏夹' : '设为默认收藏夹'} onClick={(e) => handleSetDefault(e, collection)} className={`rounded-md p-1.5 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] ${isDefault ? 'text-amber-300' : 'text-[hsl(var(--wb-muted))] hover:text-amber-300'}`}><FavoriteIcon filled={isDefault} className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip="重命名" onClick={(e) => startRename(e, collection)} className="rounded-md p-1.5 text-[hsl(var(--wb-muted))] transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-emerald-300"><EditIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip={canDelete ? '删除' : '至少保留一个收藏夹'} disabled={!canDelete} onClick={(e) => handleDelete(e, collection)} className={`rounded-md p-1.5 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] ${canDelete ? 'text-[hsl(var(--wb-muted))] hover:text-rose-300' : 'text-[hsl(var(--wb-muted)/0.45)] cursor-not-allowed'}`}><TrashIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
                       </>
                     )}
                   </div>
@@ -981,7 +981,7 @@ export function FavoriteCollectionPickerModal() {
             )})}
           </div>
         </div>
-        <div className="border-t border-gray-200 p-6 dark:border-[#333] shrink-0">
+        <div className="border-t border-[hsl(var(--wb-line)/0.55)] p-6 shrink-0">
           <div className="flex gap-3">
             <input
               value={draft}
@@ -991,20 +991,20 @@ export function FavoriteCollectionPickerModal() {
               }}
               type="text"
               placeholder="新建收藏夹..."
-              className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-transparent px-4 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-white/10 dark:text-white dark:focus:border-white/30 dark:focus:ring-white/30"
+              className="workbench-control min-w-0 flex-1 rounded-xl px-4 py-2 text-sm outline-none"
             />
             <button 
               type="button" 
               onClick={handleCreate} 
               disabled={!draft.trim()}
-              className="inline-flex items-center justify-center rounded-xl bg-gray-200 px-5 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+              className="inline-flex items-center justify-center rounded-xl border border-[hsl(var(--wb-line)/0.6)] bg-[hsl(var(--wb-accent))] px-5 py-2 text-sm font-medium text-slate-950 transition hover:bg-[hsl(var(--wb-accent)/0.88)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               新建
             </button>
           </div>
           <div className="mt-5 flex gap-4">
-            <button type="button" onClick={closePicker} className="flex-1 rounded-xl border border-gray-200 bg-transparent px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/[0.04]">取消</button>
-            <button type="button" onClick={handleConfirm} className="flex-1 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 transition-colors shadow-sm border border-transparent">确认</button>
+            <button type="button" onClick={closePicker} className="flex-1 rounded-xl border border-[hsl(var(--wb-line)/0.6)] bg-transparent px-4 py-2.5 text-sm font-medium text-[hsl(var(--wb-ink))] transition-colors hover:bg-[hsl(var(--wb-accent)/0.08)]">取消</button>
+            <button type="button" onClick={handleConfirm} className="flex-1 rounded-xl border border-[hsl(var(--wb-accent)/0.45)] bg-[hsl(var(--wb-accent))] px-4 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-[hsl(var(--wb-accent)/0.88)]">确认</button>
           </div>
         </div>
       </div>
@@ -1303,22 +1303,23 @@ export function ManageCollectionsModal() {
   return createPortal(
     <div data-no-drag-select className="fixed inset-0 z-[105] flex items-center justify-center p-4 sm:p-0" onClick={closeManage}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-overlay-in" />
-      <div ref={modalRef} className="relative z-10 flex max-h-[85vh] w-full max-w-[400px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200 dark:border-[#333] dark:bg-[#1c1c1e] animate-modal-in" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 pt-6 pb-4 shrink-0 relative border-b border-gray-100 dark:border-[#333]">
-          <FavoriteActionButton tooltip="关闭" onClick={closeManage} wrapperClassName="absolute right-5 top-5 inline-flex" className="shrink-0 rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/[0.06] dark:hover:text-gray-200">
+      <div ref={modalRef} className="workbench-panel relative z-10 flex max-h-[85vh] w-full max-w-[400px] flex-col overflow-hidden rounded-[22px] animate-modal-in" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 pt-6 pb-4 shrink-0 relative border-b border-[hsl(var(--wb-line)/0.55)]">
+          <FavoriteActionButton tooltip="关闭" onClick={closeManage} wrapperClassName="absolute right-5 top-5 inline-flex" className="shrink-0 rounded-full p-1.5 text-[hsl(var(--wb-muted))] transition hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]">
             <CloseIcon className="h-5 w-5" />
           </FavoriteActionButton>
-          <h2 className="mb-2 pr-8 flex items-center gap-2.5 text-lg font-semibold text-gray-800 dark:text-gray-100 leading-snug">
+          <h2 className="mb-2 pr-8 flex items-center gap-2.5 text-lg font-semibold text-[hsl(var(--wb-ink))] leading-snug">
+            <FavoriteIcon filled className="h-5 w-5 shrink-0 text-amber-300" />
             管理收藏夹
           </h2>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-[13px] text-[hsl(var(--wb-muted))] leading-relaxed">
             在这里管理你的收藏夹列表及排序。
           </p>
         </div>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden pt-3 pb-1">
           <div className="flex-1 overflow-y-auto custom-scrollbar relative">
             {selectableCollections.length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">暂无收藏夹</div>
+              <div className="py-8 text-center text-sm text-[hsl(var(--wb-muted))]">暂无收藏夹</div>
             ) : selectableCollections.map((collection) => {
               const isDefault = collection.id === defaultFavoriteCollectionId
               const canDelete = collections.length > 1
@@ -1334,21 +1335,21 @@ export function ManageCollectionsModal() {
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleDragEnd}
                 className={`group relative flex items-center justify-between transition-colors ${
-                  draggedId === collection.id ? 'opacity-40 bg-gray-100 dark:bg-white/[0.04]' : 'hover:bg-gray-50 dark:hover:bg-white/[0.04]'
+                  draggedId === collection.id ? 'opacity-40 bg-[hsl(var(--wb-accent)/0.08)]' : 'hover:bg-[hsl(var(--wb-accent)/0.06)]'
                 }`}
                 onDragOver={(e) => handleDragOver(e, collection.id)}
                 onDrop={(e) => handleDrop(e, collection.id)}
               >
                 {dragOverId === collection.id && dragDropPosition === 'before' && draggedId !== collection.id && (
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500 z-40 pointer-events-none" />
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-[hsl(var(--wb-accent))] z-40 pointer-events-none" />
                 )}
                 {dragOverId === collection.id && dragDropPosition === 'after' && draggedId !== collection.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 z-40 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[hsl(var(--wb-accent))] z-40 pointer-events-none" />
                 )}
                 <div className="flex h-12 items-center flex-1 min-w-0 gap-3 pl-4 pr-3">
                   <div 
                     data-drag-handle
-                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-gray-400 opacity-60 transition-opacity hover:opacity-100 dark:text-gray-500 shrink-0"
+                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-[hsl(var(--wb-muted))] opacity-60 transition-opacity hover:opacity-100 shrink-0"
                     style={{ touchAction: 'none' }}
                   >
                     <DragHandleIcon className="h-3.5 w-3.5" />
@@ -1356,7 +1357,7 @@ export function ManageCollectionsModal() {
                   {editingId === collection.id ? (
                     <input
                       type="text"
-                      className="h-6 min-w-0 flex-1 rounded border border-blue-400/50 bg-white px-1.5 py-0 text-[15px] leading-6 text-gray-900 shadow-sm outline-none focus:border-blue-500 dark:border-white/20 dark:bg-black/20 dark:text-white dark:focus:border-white/40"
+                      className="workbench-control h-6 min-w-0 flex-1 rounded-[10px] px-1.5 py-0 text-[15px] leading-6"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
                       onKeyDown={handleRenameKeyDown}
@@ -1365,7 +1366,7 @@ export function ManageCollectionsModal() {
                       onBlur={confirmRename}
                     />
                   ) : (
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-gray-700 dark:text-gray-200" title={collection.name}>{collection.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-[hsl(var(--wb-ink))]" title={collection.name}>{collection.name}</span>
                   )}
                 </div>
                 <div className={`flex shrink-0 items-center justify-end gap-2 overflow-hidden pr-4 transition-all duration-150 ${editingId === collection.id ? 'w-12' : 'w-28'}`}>
@@ -1377,7 +1378,7 @@ export function ManageCollectionsModal() {
                           e.stopPropagation()
                           confirmRename()
                         }}
-                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                        className="rounded-md p-1.5 text-emerald-300 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1385,9 +1386,9 @@ export function ManageCollectionsModal() {
                       </FavoriteActionButton>
                     ) : (
                       <>
-                        <FavoriteActionButton tooltip={isDefault ? '取消默认收藏夹' : '设为默认收藏夹'} onClick={(e) => handleSetDefault(e, collection)} className={`p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors ${isDefault ? 'text-yellow-500 dark:text-yellow-400' : 'text-gray-400 hover:text-yellow-500 dark:hover:text-yellow-400'}`}><FavoriteIcon filled={isDefault} className="w-3.5 h-3.5" /></FavoriteActionButton>
-                        <FavoriteActionButton tooltip="重命名" onClick={(e) => startRename(e, collection)} className="p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"><EditIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
-                        <FavoriteActionButton tooltip={canDelete ? '删除' : '至少保留一个收藏夹'} disabled={!canDelete} onClick={(e) => handleDelete(e, collection)} className={`p-1.5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-md transition-colors ${canDelete ? 'text-gray-400 hover:text-red-500 dark:hover:text-red-400' : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'}`}><TrashIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip={isDefault ? '取消默认收藏夹' : '设为默认收藏夹'} onClick={(e) => handleSetDefault(e, collection)} className={`rounded-md p-1.5 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] ${isDefault ? 'text-amber-300' : 'text-[hsl(var(--wb-muted))] hover:text-amber-300'}`}><FavoriteIcon filled={isDefault} className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip="重命名" onClick={(e) => startRename(e, collection)} className="rounded-md p-1.5 text-[hsl(var(--wb-muted))] transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] hover:text-[hsl(var(--wb-ink))]"><EditIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
+                        <FavoriteActionButton tooltip={canDelete ? '删除' : '至少保留一个收藏夹'} disabled={!canDelete} onClick={(e) => handleDelete(e, collection)} className={`rounded-md p-1.5 transition-colors hover:bg-[hsl(var(--wb-accent)/0.12)] ${canDelete ? 'text-[hsl(var(--wb-muted))] hover:text-rose-300' : 'text-[hsl(var(--wb-muted)/0.45)] cursor-not-allowed'}`}><TrashIcon className="w-3.5 h-3.5" /></FavoriteActionButton>
                       </>
                     )}
                   </div>
@@ -1395,7 +1396,7 @@ export function ManageCollectionsModal() {
             )})}
           </div>
         </div>
-        <div className="border-t border-gray-200 p-6 dark:border-[#333] shrink-0">
+        <div className="border-t border-[hsl(var(--wb-line)/0.55)] p-6 shrink-0">
           <div className="flex gap-3">
             <input
               value={draft}
@@ -1405,13 +1406,13 @@ export function ManageCollectionsModal() {
               }}
               type="text"
               placeholder="新建收藏夹..."
-              className="min-w-0 flex-1 rounded-xl border border-gray-300 bg-transparent px-4 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-white/10 dark:text-white dark:focus:border-white/30 dark:focus:ring-white/30"
+              className="workbench-control min-w-0 flex-1 rounded-xl px-4 py-2 text-sm outline-none"
             />
             <button 
               type="button" 
               onClick={handleCreate} 
               disabled={!draft.trim()}
-              className="inline-flex items-center justify-center rounded-xl bg-gray-200 px-5 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+              className="inline-flex items-center justify-center rounded-xl border border-[hsl(var(--wb-line)/0.6)] bg-[hsl(var(--wb-accent))] px-5 py-2 text-sm font-medium text-slate-950 transition hover:bg-[hsl(var(--wb-accent)/0.88)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               新建
             </button>

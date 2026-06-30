@@ -163,6 +163,28 @@ describe('mergeImportedSettings', () => {
     expect(merged.profiles[1].id).not.toBe(DEFAULT_OPENAI_PROFILE_ID)
   })
 
+  it('preserves non-profile settings when current settings only differ outside the default profile list', () => {
+    const current = normalizeSettings({
+      ...DEFAULT_SETTINGS,
+      clearInputAfterSubmit: true,
+    })
+
+    const merged = mergeImportedSettings(current, {
+      baseUrl: 'https://imported.example.com/v1',
+      apiKey: 'imported-key',
+      model: 'imported-model',
+    })
+
+    expect(merged.clearInputAfterSubmit).toBe(true)
+    expect(merged.profiles).toHaveLength(2)
+    expect(merged.activeProfileId).toBe(current.activeProfileId)
+    expect(merged.profiles[1]).toMatchObject({
+      baseUrl: 'https://imported.example.com/v1',
+      apiKey: 'imported-key',
+      model: 'imported-model',
+    })
+  })
+
   it('appends imported profiles as new profiles when current settings are customized', () => {
     const current = mergeImportedSettings(DEFAULT_SETTINGS, {
       baseUrl: 'https://current.example.com/v1',

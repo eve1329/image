@@ -7,6 +7,7 @@ interface UseDragSelectOptions {
   onSelectionChange: (selectedIds: string[]) => void
   initialSelectedIds?: string[]
   onSuppressClick?: () => void
+  shouldStartSelection?: (event: MouseEvent, target: Element) => boolean
 }
 
 export function useDragSelect({
@@ -16,6 +17,7 @@ export function useDragSelect({
   onSelectionChange,
   initialSelectedIds = [],
   onSuppressClick,
+  shouldStartSelection,
 }: UseDragSelectOptions) {
   const [selectionBox, setSelectionBox] = useState<{ startPageX: number; startPageY: number; currentPageX: number; currentPageY: number } | null>(null)
   const isDragging = useRef(false)
@@ -142,6 +144,7 @@ export function useDragSelect({
       const target = getEventElement(e)
       if (!target) return
       if (!target.closest(containerSelector)) return
+      if (shouldStartSelection && !shouldStartSelection(e, target)) return
       if (target.closest('[data-input-bar]')) return
       if (target.closest('[data-no-drag-select], [data-lightbox-root]')) return
       
@@ -235,7 +238,7 @@ export function useDragSelect({
       document.removeEventListener('wheel', handleDocumentWheel, true)
       window.removeEventListener('scroll', handleDocumentScroll, true)
     }
-  }, [beginSelection, containerSelector, isMac, itemSelector, onSelectionChange, onSuppressClick, updateSelectionFromPoint])
+  }, [beginSelection, containerSelector, isMac, itemSelector, onSelectionChange, onSuppressClick, shouldStartSelection, updateSelectionFromPoint])
 
   return { selectionBox, isDragging: isDragging.current }
 }

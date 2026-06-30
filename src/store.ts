@@ -41,7 +41,7 @@ import {
   clearImages,
   storeImage,
 } from './lib/db'
-import { callImageApi } from './lib/api'
+import { callImageApi, type CallApiResult } from './lib/api'
 import { callAgentConversationTitleApi, callAgentResponsesApi, callBatchImageSingle, parseBatchImageCallArguments, type AgentApiResultImage } from './lib/agentApi'
 import { collectAgentRoundOutputImageSlots, extractAgentReferenceIds, getAgentCurrentReferenceId, getAgentGeneratedImageReferenceId, replaceAgentPromptImageReferencesForApi } from './lib/agentImageReferences'
 import { showBrowserNotification } from './lib/browserNotification'
@@ -349,6 +349,31 @@ function showTaskCompletionNotification(title: string, body: string) {
 
 function countSuccessfulOutputImages(tasks: TaskRecord[]) {
   return tasks.reduce((count, task) => count + (task.status === 'done' && !isAgentTask(task) ? task.outputImages.length : 0), 0)
+}
+
+function pruneSelectedTaskIds(selectedTaskIds: string[], tasks: TaskRecord[]) {
+  if (selectedTaskIds.length === 0) return selectedTaskIds
+
+  const taskIds = new Set(tasks.map((task) => task.id))
+  const seen = new Set<string>()
+  const next = selectedTaskIds.filter((id) => {
+    if (!taskIds.has(id) || seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
+
+  if (next.length === selectedTaskIds.length) return selectedTaskIds
+  return next
+}
+
+function pruneSelectionAfterTaskRemoval(removedTaskIds: string[]) {
+  if (removedTaskIds.length === 0) return
+
+  const removedIds = new Set(removedTaskIds)
+  const state = useStore.getState()
+  const nextSelectedTaskIds = state.selectedTaskIds.filter((id) => !removedIds.has(id))
+  if (nextSelectedTaskIds.length === state.selectedTaskIds.length) return
+  state.setSelectedTaskIds(nextSelectedTaskIds)
 }
 
 function skipSupportPromptForImportedData(tasks: TaskRecord[]) {
@@ -719,7 +744,7 @@ function mergePersistedState(persistedState: unknown, currentState: AppState): A
     typeof persisted.activeAgentConversationId === 'string' && (!hasPersistedAgentConversations || agentConversations.some((conversation) => conversation.id === persisted.activeAgentConversationId))
       ? persisted.activeAgentConversationId
       : agentConversations[0]?.id ?? null
-  const appMode = persisted.appMode === 'agent' ? 'agent' : 'gallery'
+  const appMode = persisted.appMode === 'agent' || persisted.appMode === 'canvas' ? persisted.appMode : 'gallery'
   const galleryInputDraft = settings.persistInputOnRestart
     ? normalizeAgentInputDraft(persisted.galleryInputDraft ?? {
         prompt: persisted.prompt,
@@ -1164,6 +1189,17 @@ export const useStore = create<AppState>()(
           return
         }
 
+        if (appMode === 'canvas') {
+          set((state) => ({
+            appMode: 'canvas',
+            agentMobileHeaderVisible: true,
+            selectedTaskIds: [],
+            selectedFavoriteCollectionIds: [],
+            ...(state.appMode === 'agent' ? restoreGalleryInputDraftState(saveGalleryInputDraft(state)) : {}),
+          }))
+          return
+        }
+
         const state = get()
         const settings = normalizeSettings(state.settings)
         const activeProfile = getActiveApiProfile(settings)
@@ -1459,8 +1495,9 @@ export const useStore = create<AppState>()(
 
       // Tasks
       tasks: [],
-      setTasks: (tasks) => set(() => ({
+      setTasks: (tasks) => set((state) => ({
         tasks,
+        selectedTaskIds: pruneSelectedTaskIds(state.selectedTaskIds, tasks),
         ...(countSuccessfulOutputImages(tasks) <= SUPPORT_PROMPT_IMAGE_THRESHOLD
           ? { supportPromptSkippedForImportedData: false }
           : {}),
@@ -1525,13 +1562,15 @@ export const useStore = create<AppState>()(
 
       // Selection
       selectedTaskIds: [],
-      setSelectedTaskIds: (updater) => set((s) => ({
-        selectedTaskIds: typeof updater === 'function' ? updater(s.selectedTaskIds) : updater
-      })),
+      setSelectedTaskIds: (updater) => set((state) => {
+        const next = typeof updater === 'function' ? updater(state.selectedTaskIds) : updater
+        return { selectedTaskIds: pruneSelectedTaskIds(Array.from(new Set(next)), state.tasks) }
+      }),
       toggleTaskSelection: (id, force) => set((s) => {
         const isSelected = s.selectedTaskIds.includes(id)
         const shouldSelect = force !== undefined ? force : !isSelected
         if (shouldSelect === isSelected) return s
+        if (shouldSelect && !s.tasks.some((task) => task.id === id)) return s
         return {
           selectedTaskIds: shouldSelect
             ? [...s.selectedTaskIds, id]
@@ -2771,6 +2810,42 @@ async function storeTaskOutputImages(task: TaskRecord, images: string[]) {
       outputIds,
       outputDataUrls,
       transparentOriginalImageIds: transparentOriginalImageIds.length ? transparentOriginalImageIds : undefined,
+    }
+  } catch (err) {
+    await deleteUnreferencedImageIds(storedImageIds)
+    throw err
+  }
+}
+
+async function storeTaskOutputVideos(videos: NonNullable<CallApiResult['videos']>) {
+  const outputIds: string[] = []
+  const storedImageIds: string[] = []
+  let videoMetadata: { duration: number; aspectRatio: string; url?: string } | undefined
+
+  try {
+    for (const video of videos) {
+      // 存储视频缩略图（作为图片存储）
+      const thumbnailId = await storeImage(video.thumbnailDataUrl, 'generated')
+      storedImageIds.push(thumbnailId)
+      cacheImage(thumbnailId, video.thumbnailDataUrl)
+      outputIds.push(thumbnailId)
+
+      // 保存视频元数据（只保存第一个视频的）
+      if (!videoMetadata) {
+        videoMetadata = {
+          duration: video.duration,
+          aspectRatio: video.aspectRatio,
+          url: video.url,
+        }
+      }
+
+      // TODO: 考虑存储完整视频到 IndexedDB（如果需要）
+      // 目前只存缩略图，完整视频可以通过 URL 重新下载
+    }
+
+    return {
+      outputIds,
+      videoMetadata,
     }
   } catch (err) {
     await deleteUnreferencedImageIds(storedImageIds)
@@ -4160,12 +4235,30 @@ async function executeTask(taskId: string) {
       return
     }
 
-    // 存储输出图片
-    const { outputIds, outputDataUrls, transparentOriginalImageIds } = await storeTaskOutputImages(task, result.images)
+    // 检查是否为视频任务
+    const isVideoTask = result.videos && result.videos.length > 0
+
+    // 存储输出（图片或视频）
+    let outputIds: string[]
+    let outputDataUrls: string[] = []
+    let transparentOriginalImageIds: string[] | undefined
+    let videoMetadata: { duration: number; aspectRatio: string; url?: string } | undefined
+
+    if (isVideoTask) {
+      const videoResult = await storeTaskOutputVideos(result.videos!)
+      outputIds = videoResult.outputIds
+      videoMetadata = videoResult.videoMetadata
+    } else {
+      const imageResult = await storeTaskOutputImages(task, result.images)
+      outputIds = imageResult.outputIds
+      outputDataUrls = imageResult.outputDataUrls
+      transparentOriginalImageIds = imageResult.transparentOriginalImageIds
+    }
+
     const isAsyncCustomTask = taskProvider !== 'fal' && taskProvider !== 'openai' && Boolean(customTaskInfo)
     const actualParamsList = taskProvider === 'fal'
       ? await resolveImageSizeParamsList(outputDataUrls, result.actualParamsList)
-      : isAsyncCustomTask
+      : isAsyncCustomTask && !isVideoTask
       ? await readImageSizeParamsList(outputDataUrls)
       : result.actualParamsList
     const actualParams = (() => {
@@ -4215,15 +4308,22 @@ async function executeTask(taskId: string) {
       elapsed: Date.now() - task.createdAt,
       falRecoverable: false,
       customRecoverable: false,
+      // 视频相关字段
+      mediaType: isVideoTask ? 'video' : 'image',
+      videoDuration: videoMetadata?.duration,
+      videoAspectRatio: videoMetadata?.aspectRatio,
+      videoUrl: videoMetadata?.url,
     })
     void deleteUnreferencedImageIds(partialImageIdsToClean)
 
     const failedCount = result.failedRequests?.length ?? 0
+    const mediaLabel = isVideoTask ? '视频' : '图片'
     const completionMessage = failedCount > 0
-      ? `生成完成：成功 ${outputIds.length} 张，失败 ${failedCount} 张`
-      : `生成完成，共 ${outputIds.length} 张图片`
+      ? `生成完成：成功 ${outputIds.length} 个，失败 ${failedCount} 个`
+      : `生成完成，共 ${outputIds.length} 个${mediaLabel}`
     useStore.getState().showToast(completionMessage, failedCount > 0 ? 'error' : 'success')
-    if (!isAgentTask(task)) showTaskCompletionNotification('图像生成完成', `${completionMessage}。`)
+    const notificationTitle = isVideoTask ? '视频生成完成' : '图像生成完成'
+    if (!isAgentTask(task)) showTaskCompletionNotification(notificationTitle, `${completionMessage}。`)
     const currentMask = useStore.getState().maskDraft
     if (
       maskDataUrl &&
@@ -4699,6 +4799,7 @@ export async function removeTask(task: TaskRecord) {
   const remaining = await scrubAgentOutputPayloadsForDeletedTasks([task], tasks.filter((t) => t.id !== task.id))
   setTasks(remaining)
   await dbDeleteTask(task.id)
+  pruneSelectionAfterTaskRemoval([task.id])
 
   // 找出其他任务仍引用的图片
   const stillUsed = new Set<string>()

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { DEFAULT_DROPDOWN_MAX_HEIGHT } from '../lib/dropdown'
 import { ChevronDownIcon, EditIcon, PlusIcon, TrashIcon, DragHandleIcon } from './icons'
@@ -25,10 +25,28 @@ interface SelectProps {
   onOpenChange?: (isOpen: boolean) => void
 }
 
+export function getNextActiveOptionIndex(currentIndex: number, key: string, optionCount: number) {
+  if (optionCount <= 0) return -1
+
+  switch (key) {
+    case 'ArrowDown':
+      return Math.min(optionCount - 1, Math.max(0, currentIndex) + 1)
+    case 'ArrowUp':
+      return currentIndex <= 0 ? 0 : currentIndex - 1
+    case 'Home':
+      return 0
+    case 'End':
+      return optionCount - 1
+    default:
+      return currentIndex
+  }
+}
+
 export default function Select({ value, onChange, onReorder, options, disabled, className, onOpenChange }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [menuMaxHeight, setMenuMaxHeight] = useState(DEFAULT_DROPDOWN_MAX_HEIGHT)
   const [placement, setPlacement] = useState<'bottom' | 'top'>('bottom')
+  const [activeOptionIndex, setActiveOptionIndex] = useState(-1)
   const [draggedValue, setDraggedValue] = useState<string | number | null>(null)
   const [dragOverValue, setDragOverValue] = useState<string | number | null>(null)
   const [dragDropPosition, setDragDropPosition] = useState<'before' | 'after' | null>(null)
@@ -44,9 +62,12 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
   const touchDragRef = useRef<{ value: string | number, startX: number, startY: number, moved: boolean } | null>(null)
   const dragScrollIntervalRef = useRef<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const listboxId = useId()
 
   const selectedOption = options.find((o) => o.value === value)
+  const activeOption = activeOptionIndex >= 0 ? options[activeOptionIndex] : undefined
+  const activeOptionId = isOpen && activeOption ? `${listboxId}-option-${activeOptionIndex}` : undefined
 
   useEffect(() => {
     return () => {
@@ -135,12 +156,70 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
     }
   }, [isOpen])
 
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveOptionIndex(-1)
+      return
+    }
+
+    if (options.length === 0) {
+      setActiveOptionIndex(-1)
+      return
+    }
+
+    const selectedIndex = options.findIndex((option) => option.value === value)
+    const nextIndex = activeOptionIndex >= 0
+      ? Math.min(options.length - 1, activeOptionIndex)
+      : Math.max(0, selectedIndex)
+
+    if (nextIndex !== activeOptionIndex) {
+      setActiveOptionIndex(nextIndex)
+    }
+  }, [isOpen, options, value, activeOptionIndex])
+
   const handleToggle = (e: React.MouseEvent) => {
     if (disabled) return
     e.preventDefault()
     e.stopPropagation()
     // 动画和位置的计算在 useEffect 中进行，这里可以先假设一个默认值或保留当前状态
-    setIsOpen(!isOpen)
+    setIsOpen((currentOpen) => {
+      const nextOpen = !currentOpen
+      if (nextOpen) {
+        const selectedIndex = options.findIndex((option) => option.value === value)
+        setActiveOptionIndex(Math.max(0, selectedIndex))
+      }
+      return nextOpen
+    })
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled || !isOpen) return
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      setIsOpen(false)
+      triggerRef.current?.focus()
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      event.stopPropagation()
+      const option = activeOption ?? options[0]
+      if (option) {
+        onChange(option.value)
+      }
+      setIsOpen(false)
+      return
+    }
+
+    const nextIndex = getNextActiveOptionIndex(activeOptionIndex, event.key, options.length)
+    if (nextIndex !== activeOptionIndex) {
+      event.preventDefault()
+      event.stopPropagation()
+      setActiveOptionIndex(nextIndex)
+    }
   }
 
   const clearTouchDrag = () => {
@@ -157,28 +236,42 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div
+      <button
         ref={triggerRef}
+        id={`${listboxId}-trigger`}
+        type="button"
         onClick={handleToggle}
-        className={`flex items-center justify-between gap-1 w-full cursor-pointer select-none ${className ?? ''} ${
-          disabled ? '!opacity-50 !cursor-not-allowed !bg-gray-100/50 dark:!bg-white/[0.05]' : ''
+        onKeyDown={handleKeyDown}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={`${listboxId}-listbox`}
+        aria-activedescendant={activeOptionId}
+        className={`flex items-center justify-between gap-1 w-full cursor-pointer select-none text-left ${className ?? ''} ${
+          disabled ? '!opacity-50 !cursor-not-allowed !bg-white/[0.03]' : ''
         }`}
       >
         <span className="truncate">{selectedOption?.label ?? value}</span>
-        <ChevronDownIcon className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
+        <ChevronDownIcon className={`w-3.5 h-3.5 flex-shrink-0 text-[hsl(var(--workbench-muted))] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
       {isOpen && (
         <div
-          className={`absolute z-50 w-full overflow-hidden overflow-y-auto rounded-xl border border-gray-200/60 bg-white/95 py-1 shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-1 ring-black/5 backdrop-blur-xl dark:border-white/[0.08] dark:bg-gray-900/95 dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] dark:ring-white/10 custom-scrollbar ${
+          id={`${listboxId}-listbox`}
+          role="listbox"
+          aria-labelledby={`${listboxId}-trigger`}
+          className={`absolute z-50 w-full overflow-hidden overflow-y-auto rounded-xl border border-white/8 bg-[hsl(var(--workbench-panel))]/98 py-1 shadow-[0_14px_36px_hsl(var(--workbench-shadow)/0.45)] ring-1 ring-white/5 backdrop-blur-xl custom-scrollbar ${
             placement === 'top' ? 'bottom-full mb-1.5 animate-dropdown-up' : 'top-full mt-1.5 animate-dropdown-down'
           }`}
           style={{ maxHeight: menuMaxHeight }}
         >
-          {options.map((option) => (
+          {options.map((option, optionIndex) => (
             <div
               key={option.value}
+              id={`${listboxId}-option-${optionIndex}`}
+              role="option"
               data-option-value={String(option.value)}
+              aria-selected={option.value === value}
               draggable={option.draggable}
               onDragStart={(e) => {
                 if (!option.draggable) return
@@ -335,27 +428,29 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
               }}
               className={`relative flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-xs transition-colors ${
                 draggedValue === option.value
-                  ? 'opacity-40 bg-gray-100 dark:bg-white/[0.04]'
+                  ? 'opacity-40 bg-white/[0.03]'
                   : option.variant === 'action'
-                  ? 'font-semibold text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10'
+                  ? 'font-semibold text-cyan-200 hover:bg-cyan-500/10'
                   : option.variant === 'danger'
-                  ? 'font-semibold text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10'
+                  ? 'font-semibold text-red-300 hover:bg-red-500/10'
+                  : optionIndex === activeOptionIndex
+                  ? 'bg-white/[0.06] text-[hsl(var(--workbench-ink))]'
                   : option.value === value
-                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.06]'
+                  ? 'bg-cyan-500/10 text-cyan-100 font-medium'
+                  : 'text-[hsl(var(--workbench-ink)/0.88)] hover:bg-white/[0.04]'
               }`}
             >
               {dragOverValue === option.value && dragDropPosition === 'before' && draggedValue !== option.value && (
-                <div className="absolute -top-[1px] left-0 right-0 h-[2px] bg-blue-500 rounded-full z-40 shadow-sm pointer-events-none" />
+                <div className="absolute -top-[1px] left-0 right-0 h-[2px] rounded-full z-40 shadow-sm pointer-events-none bg-cyan-400" />
               )}
               {dragOverValue === option.value && dragDropPosition === 'after' && draggedValue !== option.value && (
-                <div className="absolute -bottom-[1px] left-0 right-0 h-[2px] bg-blue-500 rounded-full z-40 shadow-sm pointer-events-none" />
+                <div className="absolute -bottom-[1px] left-0 right-0 h-[2px] rounded-full z-40 shadow-sm pointer-events-none bg-cyan-400" />
               )}
               <div className="flex min-w-0 flex-1 items-center gap-2 pr-2">
                 {option.draggable && (
                   <div
                     data-drag-handle
-                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-gray-400 opacity-60 transition-opacity hover:opacity-100 dark:text-gray-500"
+                    className="flex cursor-grab active:cursor-grabbing items-center justify-center text-[hsl(var(--workbench-muted))] opacity-70 transition-opacity hover:opacity-100"
                     style={{ touchAction: 'none' }}
                     title="拖拽排序"
                   >
@@ -374,15 +469,15 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
                       onPointerDown={(event) => {
                         event.stopPropagation()
                       }}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        event.stopPropagation()
-                        action.onClick()
-                        setIsOpen(false)
-                      }}
-                      className={`rounded-md p-1.5 transition flex items-center justify-center ${action.variant === 'danger'
-                        ? 'text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10'
-                        : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/[0.08] dark:hover:text-gray-200'}`}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      action.onClick()
+                      setIsOpen(false)
+                    }}
+                    className={`rounded-md p-1.5 transition flex items-center justify-center ${action.variant === 'danger'
+                        ? 'text-red-300 hover:bg-red-500/10'
+                        : 'text-[hsl(var(--workbench-muted))] hover:bg-white/[0.06] hover:text-white'}`}
                     >
                       {action.label === '编辑' ? (
                         <EditIcon className="w-3.5 h-3.5" />
@@ -408,7 +503,7 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
       {touchDragPreview && createPortal(
         <div
           id="touch-drag-preview"
-          className="fixed pointer-events-none z-[110] flex items-center justify-between gap-2 rounded-xl bg-white/95 px-3 py-2 text-xs text-gray-700 shadow-xl ring-1 ring-black/5 backdrop-blur-xl dark:bg-gray-900/95 dark:text-gray-300 dark:ring-white/10"
+          className="fixed pointer-events-none z-[110] flex items-center justify-between gap-2 rounded-xl border border-white/8 bg-[hsl(var(--workbench-panel))]/98 px-3 py-2 text-xs text-[hsl(var(--workbench-ink))] shadow-xl ring-1 ring-white/5 backdrop-blur-xl"
           style={{
             left: touchDragPreview.x - touchDragPreview.offsetX,
             top: touchDragPreview.y - touchDragPreview.offsetY,
@@ -417,7 +512,7 @@ export default function Select({ value, onChange, onReorder, options, disabled, 
           }}
         >
           <div className="flex min-w-0 flex-1 items-center gap-2 pr-2">
-            <DragHandleIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
+            <DragHandleIcon className="h-3.5 w-3.5 shrink-0 text-[hsl(var(--workbench-muted))]" />
             <span className="min-w-0 truncate">{touchDragPreview.label}</span>
           </div>
         </div>,

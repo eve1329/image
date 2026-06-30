@@ -28,10 +28,22 @@ export default function Lightbox() {
   const [src, setSrc] = useState('')
   const [maskImageSrc, setMaskImageSrc] = useState('')
   const [maskPreviewSrc, setMaskPreviewSrc] = useState('')
+  const [isVideo, setIsVideo] = useState(false)
 
   const close = useCallback(() => setLightboxImageId(null), [setLightboxImageId])
   useCloseOnEscape(Boolean(lightboxImageId), close)
   usePreventBackgroundScroll(Boolean(lightboxImageId))
+
+  // 判断当前是否为视频
+  useEffect(() => {
+    if (!lightboxImageId) {
+      setIsVideo(false)
+      return
+    }
+
+    const task = tasks.find((t) => t.outputImages.includes(lightboxImageId))
+    setIsVideo(task?.mediaType === 'video')
+  }, [lightboxImageId, tasks])
 
   // 图片加载
   useEffect(() => {
@@ -154,6 +166,7 @@ export default function Lightbox() {
       total={total}
       onPrev={goPrev}
       onNext={goNext}
+      isVideo={isVideo}
     />
   )
 }
@@ -168,10 +181,11 @@ interface LightboxInnerProps {
   total: number
   onPrev: () => void
   onNext: () => void
+  isVideo: boolean
 }
 
 /** 内部组件：保证挂载时 DOM 已经存在，所有 ref / effect 都可靠 */
-function LightboxInner({ src, imageId, maskPreviewSrc, onClose, showNav, currentIndex, total, onPrev, onNext }: LightboxInnerProps) {
+function LightboxInner({ src, imageId, maskPreviewSrc, onClose, showNav, currentIndex, total, onPrev, onNext, isVideo }: LightboxInnerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const openedAtRef = useRef(Date.now())
 
@@ -623,19 +637,32 @@ function LightboxInner({ src, imageId, maskPreviewSrc, onClose, showNav, current
             willChange: 'transform',
           }}
         >
-          <img
-            src={src}
-            data-image-id={imageId}
-            className="saveable-image max-w-[85vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
-            onDragStart={(e) => e.preventDefault()}
-            alt=""
-          />
-          {maskPreviewSrc && (
-            <img
-              src={maskPreviewSrc}
-              className="absolute inset-0 w-full h-full object-contain rounded-lg pointer-events-none"
-              alt=""
+          {isVideo ? (
+            <video
+              src={src}
+              controls
+              autoPlay
+              loop
+              className="max-w-[85vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
+              onDragStart={(e) => e.preventDefault()}
             />
+          ) : (
+            <>
+              <img
+                src={src}
+                data-image-id={imageId}
+                className="saveable-image max-w-[85vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                onDragStart={(e) => e.preventDefault()}
+                alt=""
+              />
+              {maskPreviewSrc && (
+                <img
+                  src={maskPreviewSrc}
+                  className="absolute inset-0 w-full h-full object-contain rounded-lg pointer-events-none"
+                  alt=""
+                />
+              )}
+            </>
           )}
         </div>
       </div>

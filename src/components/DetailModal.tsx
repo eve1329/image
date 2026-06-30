@@ -499,30 +499,54 @@ export default function DetailModal() {
           )}
           {task.status === 'done' && outputLen > 0 && currentOutputPreviewSrc && (
             <>
-              <img
-                src={currentOutputPreviewSrc}
-                data-image-id={currentOutputImageId}
-                className="saveable-image max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] object-contain cursor-pointer"
-                onLoad={(e) => {
-                  const image = e.currentTarget
-                  if (currentOutputImageId && image.naturalWidth > 0 && image.naturalHeight > 0) {
-                    setImageRatios((prev) => ({
-                      ...prev,
-                      [currentOutputImageId]: formatImageRatio(image.naturalWidth, image.naturalHeight),
-                    }))
-                    setImageSizes((prev) => ({
-                      ...prev,
-                      [currentOutputImageId]: `${image.naturalWidth}×${image.naturalHeight}`,
-                    }))
+              {task.mediaType === 'video' ? (
+                <video
+                  src={currentOutputPreviewSrc}
+                  controls
+                  autoPlay
+                  loop
+                  className="max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] object-contain cursor-pointer"
+                  onClick={() =>
+                    setLightboxImageId(currentOutputImageId, task.outputImages)
                   }
-                }}
-                onClick={() =>
-                  setLightboxImageId(currentOutputImageId, task.outputImages)
-                }
-                alt=""
-              />
+                />
+              ) : (
+                <img
+                  src={currentOutputPreviewSrc}
+                  data-image-id={currentOutputImageId}
+                  className="saveable-image max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] object-contain cursor-pointer"
+                  onLoad={(e) => {
+                    const image = e.currentTarget
+                    if (currentOutputImageId && image.naturalWidth > 0 && image.naturalHeight > 0) {
+                      setImageRatios((prev) => ({
+                        ...prev,
+                        [currentOutputImageId]: formatImageRatio(image.naturalWidth, image.naturalHeight),
+                      }))
+                      setImageSizes((prev) => ({
+                        ...prev,
+                        [currentOutputImageId]: `${image.naturalWidth}×${image.naturalHeight}`,
+                      }))
+                    }
+                  }}
+                  onClick={() =>
+                    setLightboxImageId(currentOutputImageId, task.outputImages)
+                  }
+                  alt=""
+                />
+              )}
               <div data-selectable-text className="absolute left-4 top-[15px] flex items-center gap-1.5">
-                {currentImageRatio && currentImageSize ? (
+                {task.mediaType === 'video' && task.videoAspectRatio ? (
+                  <>
+                    <span className="bg-black/50 text-white text-xs px-2 py-0.5 rounded backdrop-blur-sm font-mono">
+                      {task.videoAspectRatio}
+                    </span>
+                    {task.videoDuration && (
+                      <span className="bg-black/50 text-white/90 text-xs px-2 py-0.5 rounded backdrop-blur-sm font-medium">
+                        {Math.floor(task.videoDuration)}s
+                      </span>
+                    )}
+                  </>
+                ) : currentImageRatio && currentImageSize ? (
                   <>
                     <span className="bg-black/50 text-white text-xs px-2 py-0.5 rounded backdrop-blur-sm font-mono">
                       {currentImageRatio}

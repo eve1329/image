@@ -1,0 +1,3 @@
+[submodule "vendor/infinite-canvas"]
+	path = vendor/infinite-canvas
+	url = https://github.com/basketikun/infinite-canvas.git

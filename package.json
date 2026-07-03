@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:canvas": "cd vendor/infinite-canvas/web && rm -rf .next && mkdir -p /tmp/gpt-image-playground-infinite-canvas-next && ln -sfn \"$PWD/node_modules\" /tmp/gpt-image-playground-infinite-canvas-next/node_modules && ln -sfn /tmp/gpt-image-playground-infinite-canvas-next .next && ./node_modules/.bin/next dev -H 0.0.0.0 -p 3002",
+    "dev:all": "sh -c 'trap \"kill 0\" INT TERM EXIT; npm run dev & npm run dev:canvas & wait'",
     "mock:api": "node scripts/mock-image-api.mjs",
     "build": "tsc -b && vite build",
     "deploy:cf": "npm run build && wrangler deploy",

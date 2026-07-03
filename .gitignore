@@ -4,3 +4,4 @@ dev-proxy.config.json
 .wrangler/
 .agents/
 .playwright-cli/
+.DS_Store

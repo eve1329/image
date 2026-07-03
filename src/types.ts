@@ -1,7 +1,7 @@
 // ===== 设置 =====
 
 export type ApiMode = 'images' | 'responses'
-export type AppMode = 'gallery' | 'agent' | 'canvas'
+export type AppMode = 'gallery' | 'agent' | 'canvas' | 'infinite-canvas'
 export type MediaType = 'image' | 'video'
 export type ReferenceImageEditAction = 'ask' | 'replace-reference' | 'add-mask'
 export const ZIP_DOWNLOAD_ROUTE_VALUES = [

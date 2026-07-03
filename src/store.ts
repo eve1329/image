@@ -744,7 +744,7 @@ function mergePersistedState(persistedState: unknown, currentState: AppState): A
     typeof persisted.activeAgentConversationId === 'string' && (!hasPersistedAgentConversations || agentConversations.some((conversation) => conversation.id === persisted.activeAgentConversationId))
       ? persisted.activeAgentConversationId
       : agentConversations[0]?.id ?? null
-  const appMode = persisted.appMode === 'agent' || persisted.appMode === 'canvas' ? persisted.appMode : 'gallery'
+  const appMode = persisted.appMode === 'agent' || persisted.appMode === 'canvas' || persisted.appMode === 'infinite-canvas' ? persisted.appMode : 'gallery'
   const galleryInputDraft = settings.persistInputOnRestart
     ? normalizeAgentInputDraft(persisted.galleryInputDraft ?? {
         prompt: persisted.prompt,
@@ -1189,9 +1189,9 @@ export const useStore = create<AppState>()(
           return
         }
 
-        if (appMode === 'canvas') {
+        if (appMode === 'canvas' || appMode === 'infinite-canvas') {
           set((state) => ({
-            appMode: 'canvas',
+            appMode,
             agentMobileHeaderVisible: true,
             selectedTaskIds: [],
             selectedFavoriteCollectionIds: [],

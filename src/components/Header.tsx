@@ -252,6 +252,13 @@ export default function Header() {
             </button>
             <button
               type="button"
+              onClick={() => setAppMode('infinite-canvas')}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'infinite-canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              画布
+            </button>
+            <button
+              type="button"
               onClick={() => setAppMode('agent')}
               className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'agent' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
@@ -315,7 +322,7 @@ export default function Header() {
           </div>
         </div>
         <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode !== 'agent' && scrollDirection === 'down' ? 'max-h-0 opacity-0 pb-0' : 'max-h-20 opacity-100 pb-2'}`}>
-          <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1 mx-2">
+          <div className="grid grid-cols-4 gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1 mx-2">
             <button
               type="button"
               onClick={() => setAppMode('gallery')}
@@ -329,6 +336,13 @@ export default function Header() {
               className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
               Canvas
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppMode('infinite-canvas')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'infinite-canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              画布
             </button>
             <button
               type="button"
@@ -351,7 +365,7 @@ export default function Header() {
       <div className={`safe-area-top invisible pointer-events-none transition-all duration-300 ease-in-out ${appMode === 'agent' && !agentMobileHeaderVisible ? 'max-h-0 sm:max-h-[500px] opacity-0 sm:opacity-100 overflow-hidden sm:overflow-visible' : 'max-h-[500px] opacity-100'}`} aria-hidden="true">
         <div className="safe-header-inner" />
         <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode !== 'agent' && scrollDirection === 'down' ? 'max-h-0 pb-0' : 'max-h-20 pb-2'}`}>
-          <div className="p-1">
+          <div className="grid grid-cols-4 gap-1 p-1">
             <div className="py-1.5 text-sm">占位</div>
           </div>
         </div>

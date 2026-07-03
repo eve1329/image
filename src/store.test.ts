@@ -1256,6 +1256,23 @@ describe('agent draft lifecycle', () => {
     expect(useStore.getState().appMode).toBe('agent')
   })
 
+  it('accepts embedded infinite canvas mode without requiring agent configuration', () => {
+    const setConfirmDialog = vi.fn()
+    useStore.setState({
+      appMode: 'gallery',
+      settings: normalizeSettings({
+        profiles: [createDefaultOpenAIProfile({ id: 'images-profile', apiMode: 'images' })],
+        activeProfileId: 'images-profile',
+      }),
+      setConfirmDialog,
+    })
+
+    useStore.getState().setAppMode('infinite-canvas')
+
+    expect(useStore.getState().appMode).toBe('infinite-canvas')
+    expect(setConfirmDialog).not.toHaveBeenCalled()
+  })
+
   it('preserves draft state while switching through canvas mode', () => {
     useStore.setState({
       settings: normalizeSettings({

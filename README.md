@@ -307,6 +307,10 @@ bash scripts/deploy/bluegreen-host.sh
 
 - [docs/installation/bluegreen-host-image-runbook.md](docs/installation/bluegreen-host-image-runbook.md)
 
+嵌入式 Infinite Canvas 需要额外部署画布子模块服务，并在主站构建时配置画布访问地址；画布内的接口地址部署时应填写中转站域名。完整步骤见：
+
+- [docs/installation/embedded-infinite-canvas-deploy.md](docs/installation/embedded-infinite-canvas-deploy.md)
+
 如果你只想复用已经构建好的镜像 tag，可以跳过本地构建：
 
 ```bash

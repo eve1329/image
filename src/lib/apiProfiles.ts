@@ -33,7 +33,7 @@ export const DEFAULT_OPENAI_PROFILE_ID = 'default-openai'
 export const DEFAULT_API_TIMEOUT = 600
 export const LOCKED_IMAGE_RELAY_PROVIDER_ID = 'artworkers-async-image'
 export const LOCKED_IMAGE_RELAY_PROFILE_NAME = '文生图'
-export const LOCKED_IMAGE_RELAY_BASE_URL = 'http://localhost:3000'
+export const LOCKED_IMAGE_RELAY_BASE_URL = 'https://gptch.cloud'
 export const LOCKED_IMAGE_RELAY_TIMEOUT = 9000
 
 const LOCKED_IMAGE_RELAY_PROVIDER: CustomProviderDefinition = {

@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:canvas": "cd vendor/infinite-canvas/web && rm -rf .next && mkdir -p /tmp/gpt-image-playground-infinite-canvas-next && ln -sfn \"$PWD/node_modules\" /tmp/gpt-image-playground-infinite-canvas-next/node_modules && ln -sfn /tmp/gpt-image-playground-infinite-canvas-next .next && ./node_modules/.bin/next dev -H 0.0.0.0 -p 3002",
+    "dev:canvas": "cd vendor/infinite-canvas/web && rm -rf .next && NEXT_PUBLIC_DOC_URL=http://localhost:5173/manual/index.html ./node_modules/.bin/next dev -H 0.0.0.0 -p 3002",
     "dev:all": "sh -c 'trap \"kill 0\" INT TERM EXIT; npm run dev & npm run dev:canvas & wait'",
+    "build:manual": "node scripts/build-manual.mjs",
     "mock:api": "node scripts/mock-image-api.mjs",
-    "build": "tsc -b && vite build",
+    "build": "npm run build:manual && tsc -b && vite build",
     "deploy:cf": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "test": "vitest run",
@@ -33,10 +34,12 @@
     "dompurify": "^3.4.7"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
+    "marked": "^17.0.6",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",

@@ -1,3 +1,4 @@
 [submodule "vendor/infinite-canvas"]
 	path = vendor/infinite-canvas
 	url = https://github.com/gaogo21/infinite-canvas.git
+	branch = embedded-canvas-sync

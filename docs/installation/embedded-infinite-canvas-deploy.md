@@ -113,7 +113,10 @@ git submodule update --init --recursive
 
 ```bash
 cd vendor/infinite-canvas
-docker build -t infinite-canvas:latest .
+docker build \
+  --build-arg NEXT_PUBLIC_DOC_URL=https://gptch.cloud/image/manual/index.html \
+  -t infinite-canvas:latest \
+  .
 docker run -d \
   --name infinite-canvas \
   --restart unless-stopped \
@@ -125,6 +128,12 @@ docker run -d \
 
 ```text
 http://127.0.0.1:3002/canvas
+```
+
+`NEXT_PUBLIC_DOC_URL` 会在 Next.js 构建阶段写入书本按钮。它不能在容器启动后再通过 `docker run -e` 修改。主站教程随 Vite 静态产物部署，当前正式地址为：
+
+```text
+https://gptch.cloud/image/manual/index.html
 ```
 
 生产环境建议用 Nginx 或网关反代成 HTTPS，例如：
@@ -192,6 +201,7 @@ location ^~ /canvas {
 3. 确认 iframe 加载的是生产画布地址，不是 `localhost:3002`。
 4. 进入画布设置，确认“接口地址”为中转站域名，不是 `localhost:3000`。
 5. 用测试 Key 发起一次最小文生图任务，确认请求落到中转站域名。
+6. 点击画布右上角书本图标，确认新标签页打开 `/image/manual/index.html`，且教程图片完整加载。
 
 ## 常见问题
 

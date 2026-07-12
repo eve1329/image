@@ -150,7 +150,7 @@ https://image.example.com/canvas
 
 ### 3. 部署主站
 
-主站 iframe 地址需要在构建主站时写入：
+直接构建静态站点时，主站 iframe 地址需要在构建阶段写入：
 
 ```bash
 VITE_INFINITE_CANVAS_URL=https://canvas.example.com/canvas npm run build
@@ -158,7 +158,13 @@ VITE_INFINITE_CANVAS_URL=https://canvas.example.com/canvas npm run build
 
 然后把 `dist/` 部署到静态服务或容器中。
 
-如果使用项目里的 `deploy/Dockerfile` 部署主站，需要注意：当前 Docker 运行期注入只处理默认 API 地址和代理配置，不能在容器启动时再修改 `VITE_INFINITE_CANVAS_URL`。也就是说，画布地址必须在主站构建时就确定。
+如果使用项目里的 `deploy/Dockerfile`，镜像会保留画布地址占位符，并在容器启动时读取 `INFINITE_CANVAS_URL`。例如：
+
+```bash
+docker run -e INFINITE_CANVAS_URL=https://gptch.cloud/canvas/canvas ...
+```
+
+蓝绿部署脚本会从远端 `bluegreen-host.env` 读取该变量；未设置时默认使用 `https://gptch.cloud/canvas/canvas`。
 
 ### 4. Nginx 反代示例
 

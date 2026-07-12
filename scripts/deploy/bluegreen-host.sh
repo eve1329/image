@@ -460,6 +460,7 @@ replace_color() {
     -e DEFAULT_API_URL="${DEFAULT_API_URL:-https://gptch.cloud/v1}" \
     -e ENABLE_API_PROXY="${ENABLE_API_PROXY:-false}" \
     -e LOCK_API_PROXY="${LOCK_API_PROXY:-false}" \
+    -e INFINITE_CANVAS_URL="${INFINITE_CANVAS_URL:-https://gptch.cloud/canvas/canvas}" \
     -e HOST="${HOST:-0.0.0.0}" \
     -e PORT="${PORT:-80}" \
     --health-cmd 'wget -q -O - http://127.0.0.1/ >/dev/null || exit 1' \

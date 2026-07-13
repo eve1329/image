@@ -7,7 +7,7 @@ function loadFetchHandler(overrides?: {
 }) {
   const handlers: Record<string, (event: any) => void> = {}
   const self = {
-    location: { origin: 'https://gptch.cloud' },
+    location: { origin: 'https://artworkers.top' },
     skipWaiting: vi.fn(),
     clients: { claim: vi.fn() },
     addEventListener: vi.fn((type: string, handler: (event: any) => void) => {
@@ -63,7 +63,7 @@ describe('service worker fetch policy', () => {
 
     let responsePromise: Promise<Response> | undefined
     fetchHandler({
-      request: new Request('https://gptch.cloud/v1/images/tasks/task_123'),
+      request: new Request('https://artworkers.top/v1/images/tasks/task_123'),
       respondWith: (promise: Promise<Response>) => {
         responsePromise = promise
       },

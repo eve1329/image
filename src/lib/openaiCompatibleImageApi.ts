@@ -19,6 +19,7 @@ import {
   normalizeBase64Image,
   pickActualParams,
 } from './imageApiShared'
+import { downloadVideo, generateVideoThumbnail, getVideoMetadata, videoBlobToDataUrl } from './videoUtils'
 
 const PROMPT_REWRITE_GUARD_PREFIX = 'Use the following text as the complete prompt. Do not rewrite it:'
 
@@ -902,7 +903,14 @@ async function extractCustomImages(payload: unknown, result: CustomProviderResul
     getAllByPath(payload, path).filter((value): value is string => isFetchableImageUrl(value) || isDataUrl(value)),
   )
   const rawImageUrls = imageUrls.filter((value) => !isDataUrl(value))
+
+  // 处理视频
+  const videoUrls = (result.videoUrlPaths ?? []).flatMap((path) =>
+    getAllByPath(payload, path).filter((value): value is string => isFetchableImageUrl(value)),
+  )
+  const videos: CallApiResult['videos'] = []
   try {
+    // 处理图片
     for (const path of result.b64JsonPaths ?? []) {
       for (const value of getAllByPath(payload, path)) {
         if (typeof value === 'string' && value.trim()) images.push(normalizeBase64Image(value, mime))
@@ -913,6 +921,26 @@ async function extractCustomImages(payload: unknown, result: CustomProviderResul
         images.push(await fetchImageUrlAsDataUrl(url, mime, createImageDownloadOptions(profile, signal)))
       }
     }
+
+    // 处理视频
+    for (const videoUrl of videoUrls) {
+      const videoBlob = await downloadVideo(videoUrl, signal)
+      const [thumbnailDataUrl, metadata] = await Promise.all([
+        generateVideoThumbnail(videoBlob),
+        getVideoMetadata(videoBlob),
+      ])
+      const videoDataUrl = await videoBlobToDataUrl(videoBlob)
+
+      videos.push({
+        dataUrl: videoDataUrl,
+        thumbnailDataUrl,
+        duration: metadata.duration,
+        width: metadata.width,
+        height: metadata.height,
+        aspectRatio: metadata.aspectRatio,
+        url: videoUrl,
+      })
+    }
   } catch (err) {
     if (rawImageUrls.length > 0 && err instanceof Error) {
       (err as any).rawImageUrls = rawImageUrls
@@ -920,12 +948,18 @@ async function extractCustomImages(payload: unknown, result: CustomProviderResul
     throw err
   }
 
-  if (!images.length) {
-    const err = new Error('接口没有返回可识别的图片数据，请查看原始响应内容确认接口实际返回的数据结构，并根据 API 文档调整「自定义服务商」配置中的结果提取路径。')
+  // 如果既没有图片也没有视频，抛出错误
+  if (!images.length && !videos?.length) {
+    const err = new Error('接口没有返回可识别的图片或视频数据，请查看原始响应内容确认接口实际返回的数据结构，并根据 API 文档调整「自定义服务商」配置中的结果提取路径。')
     ;(err as any).rawResponsePayload = JSON.stringify(payload, null, 2)
     throw err
   }
-  return { images, ...(rawImageUrls.length ? { rawImageUrls } : {}) }
+
+  return {
+    images,
+    ...(rawImageUrls.length ? { rawImageUrls } : {}),
+    ...(videos.length ? { videos } : {}),
+  }
 }
 
 async function submitCustomRequest(mapping: CustomProviderSubmitMapping, opts: CallApiOptions, profile: ApiProfile, controller: AbortController, proxyConfig: ReturnType<typeof readClientDevProxyConfig>, useApiProxy: boolean): Promise<unknown> {

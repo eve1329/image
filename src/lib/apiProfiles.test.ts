@@ -21,11 +21,14 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-async function loadDeploymentApiProfilesModule() {
-  vi.resetModules()
-  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://artworkers.top/v1')
-  return import('./apiProfiles')
-}
+describe('DEFAULT_SETTINGS', () => {
+  it('uses artworkers.top for the built-in video profile', () => {
+    expect(DEFAULT_SETTINGS.profiles[0]).toMatchObject({
+      id: 'video-ds-2.0-profile',
+      baseUrl: 'https://artworkers.top',
+    })
+  })
+})
 
 describe('validateApiProfile', () => {
   it('allows empty API URL when API proxy is enabled and available', () => {
@@ -44,125 +47,6 @@ describe('validateApiProfile', () => {
       apiKey: 'test-key',
       apiProxy: true,
     }))).toBe('缺少 API URL')
-  })
-})
-
-describe('deployment async default profile', () => {
-  it('creates the default artworkers.top profile with a hidden async provider mapping', async () => {
-    const {
-      DEFAULT_SETTINGS: deploymentDefaultSettings,
-      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
-      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
-      createDefaultOpenAIProfile: createDeploymentDefaultOpenAIProfile,
-      getApiProviderLabel,
-      getCustomProviderDefinition,
-    } = await loadDeploymentApiProfilesModule()
-
-    const profile = createDeploymentDefaultOpenAIProfile()
-    const provider = getCustomProviderDefinition(deploymentDefaultSettings, profile.provider)
-
-    expect(profile).toMatchObject({
-      id: deploymentDefaultProfileId,
-      provider: expect.not.stringMatching(/^openai$/),
-      baseUrl: 'https://artworkers.top/v1',
-      model: deploymentDefaultModel,
-      apiMode: 'images',
-    })
-    expect(getApiProviderLabel(deploymentDefaultSettings, profile.provider)).toBe('OpenAI')
-    expect(provider).toMatchObject({
-      submit: {
-        path: 'images/generations/async',
-        method: 'POST',
-        taskIdPath: 'data.task_id',
-      },
-      editSubmit: {
-        path: 'images/edits',
-        method: 'POST',
-      },
-      poll: {
-        path: 'images/tasks/{task_id}',
-        method: 'GET',
-        statusPath: 'data.status',
-        successValues: ['SUCCESS'],
-        failureValues: ['FAILURE'],
-        errorPath: 'data.fail_reason',
-        result: {
-          imageUrlPaths: ['data.result.data.*.url'],
-        },
-      },
-    })
-  })
-
-  it('migrates stored untouched default profiles to the deployment async provider while preserving credentials', async () => {
-    const {
-      DEFAULT_STREAM_PARTIAL_IMAGES,
-      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
-      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
-      normalizeSettings: normalizeDeploymentSettings,
-    } = await loadDeploymentApiProfilesModule()
-
-    const settings = normalizeDeploymentSettings({
-      profiles: [{
-        id: deploymentDefaultProfileId,
-        name: '默认',
-        provider: 'openai',
-        baseUrl: 'https://artworkers.top/v1',
-        apiKey: 'test-key',
-        model: deploymentDefaultModel,
-        timeout: 321,
-        apiMode: 'images',
-        codexCli: false,
-        apiProxy: false,
-        streamImages: false,
-        streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
-      }],
-    })
-
-    expect(settings.profiles[0]).toMatchObject({
-      id: deploymentDefaultProfileId,
-      provider: expect.not.stringMatching(/^openai$/),
-      baseUrl: 'https://artworkers.top/v1',
-      apiKey: 'test-key',
-      model: deploymentDefaultModel,
-      timeout: 321,
-      apiMode: 'images',
-    })
-  })
-
-  it('does not overwrite persisted customized profiles during deployment migration', async () => {
-    const {
-      DEFAULT_STREAM_PARTIAL_IMAGES,
-      DEFAULT_OPENAI_PROFILE_ID: deploymentDefaultProfileId,
-      DEFAULT_IMAGES_MODEL: deploymentDefaultModel,
-      normalizeSettings: normalizeDeploymentSettings,
-    } = await loadDeploymentApiProfilesModule()
-
-    const settings = normalizeDeploymentSettings({
-      profiles: [{
-        id: deploymentDefaultProfileId,
-        name: '默认',
-        provider: 'openai',
-        baseUrl: 'https://api.example.com/v1',
-        apiKey: 'test-key',
-        model: deploymentDefaultModel,
-        timeout: 321,
-        apiMode: 'images',
-        codexCli: false,
-        apiProxy: false,
-        streamImages: false,
-        streamPartialImages: DEFAULT_STREAM_PARTIAL_IMAGES,
-      }],
-    })
-
-    expect(settings.profiles[0]).toMatchObject({
-      id: deploymentDefaultProfileId,
-      provider: 'openai',
-      baseUrl: 'https://api.example.com/v1',
-      apiKey: 'test-key',
-      model: deploymentDefaultModel,
-      timeout: 321,
-      apiMode: 'images',
-    })
   })
 })
 
@@ -286,6 +170,28 @@ describe('mergeImportedSettings', () => {
       model: 'imported-model',
     })
     expect(merged.profiles[1].id).not.toBe(DEFAULT_OPENAI_PROFILE_ID)
+  })
+
+  it('preserves non-profile settings when current settings only differ outside the default profile list', () => {
+    const current = normalizeSettings({
+      ...DEFAULT_SETTINGS,
+      clearInputAfterSubmit: true,
+    })
+
+    const merged = mergeImportedSettings(current, {
+      baseUrl: 'https://imported.example.com/v1',
+      apiKey: 'imported-key',
+      model: 'imported-model',
+    })
+
+    expect(merged.clearInputAfterSubmit).toBe(true)
+    expect(merged.profiles).toHaveLength(2)
+    expect(merged.activeProfileId).toBe(current.activeProfileId)
+    expect(merged.profiles[1]).toMatchObject({
+      baseUrl: 'https://imported.example.com/v1',
+      apiKey: 'imported-key',
+      model: 'imported-model',
+    })
   })
 
   it('appends imported profiles as new profiles when current settings are customized', () => {

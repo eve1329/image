@@ -146,19 +146,19 @@ export default function Header() {
 
   return (
     <>
-      <header data-no-drag-select className={`safe-area-top fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-gray-200 dark:border-white/[0.08] transition-transform duration-300 ease-in-out ${appMode === 'agent' && !agentMobileHeaderVisible ? '-translate-y-full sm:translate-y-0' : 'translate-y-0'}`}>
+      <header data-no-drag-select className={`safe-area-top fixed top-0 left-0 right-0 z-40 border-b border-white/5 bg-black/55 backdrop-blur-xl transition-transform duration-300 ease-in-out ${appMode === 'agent' && !agentMobileHeaderVisible ? '-translate-y-full sm:translate-y-0' : 'translate-y-0'}`}>
         <div className="safe-area-x safe-header-inner max-w-7xl mx-auto flex items-center justify-between relative">
           <div className="flex-1 min-w-0 pr-2 flex items-center gap-2">
             <h1 className="inline-flex min-w-0 items-start relative mr-2">
               {showFavoriteCollectionTitle ? (
                 <>
-                  <span className="min-w-0 truncate text-[17px] font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:hidden" title={favoriteCollectionTitle}>{favoriteCollectionTitle}</span>
-                  <span className="hidden text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:inline">
+                  <span className="min-w-0 truncate text-[17px] font-semibold tracking-tight text-[hsl(var(--workbench-ink))] sm:hidden" title={favoriteCollectionTitle}>{favoriteCollectionTitle}</span>
+                  <span className="hidden text-lg font-semibold tracking-tight text-[hsl(var(--workbench-ink))] sm:inline">
                     artworkers image
                   </span>
                 </>
               ) : (
-                <span className="text-[17px] sm:text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100">
+                <span className="text-[17px] sm:text-lg font-semibold tracking-tight text-[hsl(var(--workbench-ink))]">
                   artworkers image
                 </span>
               )}
@@ -168,7 +168,7 @@ export default function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={dismiss}
-                  className="absolute -right-1 -top-1 translate-x-full -translate-y-1/4 px-1 py-0.5 rounded-[4px] border border-red-500/30 text-[9px] font-black bg-red-500 text-white hover:bg-red-600 transition-all animate-fade-in leading-none shadow-sm"
+                  className="absolute -right-1 -top-1 translate-x-full -translate-y-1/4 px-1 py-0.5 rounded-[4px] border border-cyan-400/30 bg-cyan-500/15 text-[9px] font-black text-cyan-200 hover:bg-cyan-500/20 transition-all animate-fade-in leading-none shadow-sm"
                   title={`新版本 ${latestRelease.tag}`}
                 >
                   NEW
@@ -180,7 +180,7 @@ export default function Header() {
                 ref={historyButtonRef}
                 type="button"
                 onClick={() => setShowHistoryModal((visible) => !visible)}
-                className="p-1.5 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] rounded-lg transition-colors"
+                className="workbench-control inline-flex h-8 w-8 items-center justify-center rounded-lg text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]"
                 title="历史任务"
               >
                 <HistoryIcon className="w-5 h-5" />
@@ -191,7 +191,7 @@ export default function Header() {
                   setAppMode('agent')
                   createConversation()
                 }}
-                className="p-1.5 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.04] rounded-lg transition-colors"
+                className="workbench-control inline-flex h-8 w-8 items-center justify-center rounded-lg text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]"
                 title="新对话"
               >
                 <EditIcon className="w-5 h-5" />
@@ -212,7 +212,7 @@ export default function Header() {
                     useStore.getState().setAgentEditingConversationId(activeConversation.id)
                   }, 0)
                 }}
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate hover:bg-gray-100 dark:hover:bg-white/[0.04] px-2 py-1 rounded transition-colors"
+                className="workbench-chip truncate px-3 py-1 text-sm font-semibold text-[hsl(var(--workbench-ink))] hover:text-white"
               >
                 {activeConversation.title || 'Agent'}
               </button>
@@ -220,23 +220,37 @@ export default function Header() {
           )}
           {showFavoriteCollectionTitle && (
             <div className="absolute left-1/2 top-1/2 hidden max-w-[30%] -translate-x-1/2 -translate-y-1/2 sm:flex">
-              <div className="truncate rounded px-2 py-1 text-sm font-semibold text-gray-700 dark:text-gray-300" title={favoriteCollectionTitle}>
+              <div className="workbench-chip truncate px-3 py-1 text-sm font-semibold text-[hsl(var(--workbench-ink))]" title={favoriteCollectionTitle}>
                 {favoriteCollectionTitle}
               </div>
             </div>
           )}
-          <div className="hidden sm:flex items-center gap-1 rounded-xl border border-gray-200 dark:border-white/[0.08] bg-gray-100/70 dark:bg-white/[0.04] p-1 mr-4">
+          <div className="hidden sm:flex items-center gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1 mr-4">
             <button
               type="button"
               onClick={() => setAppMode('gallery')}
-              className={`px-4 py-1.5 rounded-lg text-sm transition-colors ${appMode === 'gallery' ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'gallery' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
               画廊
             </button>
             <button
               type="button"
+              onClick={() => setAppMode('canvas')}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              Canvas
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppMode('infinite-canvas')}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'infinite-canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              画布
+            </button>
+            <button
+              type="button"
               onClick={() => setAppMode('agent')}
-              className={`px-4 py-1.5 rounded-lg text-sm transition-colors ${appMode === 'agent' ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'agent' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
               Agent
             </button>
@@ -252,10 +266,10 @@ export default function Header() {
                     dismissAllTooltips()
                     handleInstallClick()
                   }}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                  className="workbench-control inline-flex h-9 w-9 items-center justify-center rounded-lg text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]"
                   aria-label="安装为应用"
                 >
-                  <InstallIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <InstallIcon className="w-5 h-5" />
                 </button>
                 <ViewportTooltip visible={installTooltip.visible} className="whitespace-nowrap">
                   安装为应用
@@ -271,10 +285,10 @@ export default function Header() {
                   dismissAllTooltips()
                   setShowHelp(true)
                 }}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                className="workbench-control inline-flex h-9 w-9 items-center justify-center rounded-lg text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]"
                 aria-label="操作指南"
               >
-                <HelpCircleIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <HelpCircleIcon className="w-5 h-5" />
               </button>
               <ViewportTooltip visible={helpTooltip.visible} className="whitespace-nowrap">
                 操作指南
@@ -286,10 +300,10 @@ export default function Header() {
             >
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                className="workbench-control inline-flex h-9 w-9 items-center justify-center rounded-lg text-[hsl(var(--workbench-muted))] hover:text-[hsl(var(--workbench-ink))]"
                 aria-label="设置"
               >
-                <SettingsIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <SettingsIcon className="w-5 h-5" />
               </button>
               <ViewportTooltip visible={settingsTooltip.visible} className="whitespace-nowrap">
                 设置
@@ -297,19 +311,33 @@ export default function Header() {
             </div>
           </div>
         </div>
-        <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode === 'gallery' && scrollDirection === 'down' ? 'max-h-0 opacity-0 pb-0' : 'max-h-20 opacity-100 pb-2'}`}>
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-gray-200 dark:border-white/[0.08] bg-gray-100/70 dark:bg-white/[0.04] p-1 mx-2">
+        <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode !== 'agent' && scrollDirection === 'down' ? 'max-h-0 opacity-0 pb-0' : 'max-h-20 opacity-100 pb-2'}`}>
+          <div className="grid grid-cols-4 gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1 mx-2">
             <button
               type="button"
               onClick={() => setAppMode('gallery')}
-              className={`px-4 py-1.5 rounded-lg text-sm transition-colors ${appMode === 'gallery' ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'gallery' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
               画廊
             </button>
             <button
               type="button"
+              onClick={() => setAppMode('canvas')}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              Canvas
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppMode('infinite-canvas')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'infinite-canvas' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
+            >
+              画布
+            </button>
+            <button
+              type="button"
               onClick={() => setAppMode('agent')}
-              className={`px-4 py-1.5 rounded-lg text-sm transition-colors ${appMode === 'agent' ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm font-medium' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 ${appMode === 'agent' ? 'bg-[hsl(var(--workbench-panel-strong))] text-white shadow-sm font-medium' : 'text-[hsl(var(--workbench-muted))] hover:text-white'}`}
             >
               Agent
             </button>
@@ -319,15 +347,15 @@ export default function Header() {
       
       {/* Hint for sliding down */}
       <div className={`fixed top-0 left-0 right-0 z-30 flex justify-center pointer-events-none transition-all duration-300 ease-in-out sm:hidden ${appMode === 'agent' && hintVisible && !agentMobileHeaderVisible ? 'translate-y-[env(safe-area-inset-top,0px)] opacity-100' : '-translate-y-full opacity-0'}`}>
-        <div className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-b-xl shadow-lg">
+        <div className="border border-white/10 border-t-0 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-b-xl shadow-lg">
           下拉展示顶栏
         </div>
       </div>
 
       <div className={`safe-area-top invisible pointer-events-none transition-all duration-300 ease-in-out ${appMode === 'agent' && !agentMobileHeaderVisible ? 'max-h-0 sm:max-h-[500px] opacity-0 sm:opacity-100 overflow-hidden sm:overflow-visible' : 'max-h-[500px] opacity-100'}`} aria-hidden="true">
         <div className="safe-header-inner" />
-        <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode === 'gallery' && scrollDirection === 'down' ? 'max-h-0 pb-0' : 'max-h-20 pb-2'}`}>
-          <div className="p-1">
+        <div className={`safe-area-x sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${appMode !== 'agent' && scrollDirection === 'down' ? 'max-h-0 pb-0' : 'max-h-20 pb-2'}`}>
+          <div className="grid grid-cols-4 gap-1 p-1">
             <div className="py-1.5 text-sm">占位</div>
           </div>
         </div>

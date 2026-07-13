@@ -11,12 +11,13 @@ import {
   DEFAULT_OPENAI_PROFILE_ID,
   DEFAULT_RESPONSES_MODEL,
   DEFAULT_SETTINGS,
+  LOCKED_IMAGE_RELAY_BASE_URL,
+  LOCKED_IMAGE_RELAY_PROFILE_NAME,
+  LOCKED_IMAGE_RELAY_TIMEOUT,
   findEquivalentApiProfile,
   getApiProviderLabel,
   getActiveApiProfile,
-  getCustomProviderDefinition,
   importCustomProviderSettingsFromJson,
-  isOpenAIFamilyProvider,
   isOpenAICompatibleProvider,
   mergeImportedSettings,
   normalizeAgentMaxToolRounds,
@@ -42,9 +43,9 @@ function newId(prefix: string) {
 
 const ADD_CUSTOM_PROVIDER_VALUE = '__add_custom_provider__'
 const COPY_IMPORT_URL_OPTIONS_STORAGE_KEY = 'gpt-image-playground.copy-import-url-options'
-const FIXED_API_URL = 'https://artworkers.top/v1'
-const FIXED_IMAGE_MODEL = 'gpt-image-2'
-const FIXED_TIMEOUT_SECONDS = 9000
+const FIXED_API_URL = LOCKED_IMAGE_RELAY_BASE_URL
+const FIXED_IMAGE_MODEL = DEFAULT_IMAGES_MODEL
+const FIXED_TIMEOUT_SECONDS = LOCKED_IMAGE_RELAY_TIMEOUT
 
 const DEFAULT_COPY_IMPORT_URL_OPTIONS = {
   includeApiKey: false,
@@ -205,7 +206,7 @@ function isAsyncCustomProvider(provider: CustomProviderDefinition | null | undef
 
 function isProfileApiProxyEligible(settings: AppSettings, profile: ApiProfile) {
   if (!isOpenAICompatibleProvider(settings, profile.provider)) return false
-  const customProvider = getCustomProviderDefinition(settings, profile.provider)
+  const customProvider = settings.customProviders.find((provider) => provider.id === profile.provider)
   return !isAsyncCustomProvider(customProvider)
 }
 
@@ -363,7 +364,7 @@ export default function SettingsModal() {
   const activeProfile = draft.profiles.find((profile) => profile.id === draft.activeProfileId) ?? draft.profiles[0] ?? getActiveApiProfile(draft)
   const activeProviderIsOpenAICompatible = isOpenAICompatibleProvider(draft, activeProfile.provider)
   const activeProviderUsesApiUrl = activeProviderIsOpenAICompatible || activeProfile.provider === 'fal'
-  const activeCustomProvider = getCustomProviderDefinition(draft, activeProfile.provider)
+  const activeCustomProvider = draft.customProviders.find((provider) => provider.id === activeProfile.provider)
   const activeProfileApiProxyEligible = isProfileApiProxyEligible(draft, activeProfile)
   const activeCustomProviderAsync = isAsyncCustomProvider(activeCustomProvider)
   const apiProxyChecked = activeProfileApiProxyEligible && (apiProxyLocked || activeProfile.apiProxy)
@@ -571,7 +572,7 @@ export default function SettingsModal() {
     url.search = ''
     url.hash = ''
 
-    if (isOpenAIFamilyProvider(profile.provider)) {
+    if (profile.provider === 'openai') {
       const baseUrl = profile.baseUrl.trim() || DEFAULT_SETTINGS.baseUrl
       url.searchParams.set('apiUrl', options.useNewApiAddress && !options.includeApiKey ? '{address}' : normalizeBaseUrl(baseUrl))
       if (options.includeApiKey && profile.apiKey.trim()) {
@@ -637,19 +638,31 @@ export default function SettingsModal() {
     setCopyImportUrlOptions(readCopyImportUrlOptions())
   }
 
-  const getDraftWithActiveProfilePatch = (patch: Partial<ApiProfile>) => ({
+  const getApiKeyOnlyPatch = (patch: Partial<ApiProfile>): Partial<ApiProfile> => (
+    Object.prototype.hasOwnProperty.call(patch, 'apiKey') ? { apiKey: patch.apiKey ?? '' } : {}
+  )
+
+  const getDraftWithActiveProfilePatch = (patch: Partial<ApiProfile>) => {
+    const safePatch = getApiKeyOnlyPatch(patch)
+    return {
       ...draft,
-      profiles: draft.profiles.map((profile) => profile.id === activeProfile.id ? { ...profile, ...patch } : profile),
-    })
+      ...('apiKey' in safePatch ? { apiKey: safePatch.apiKey ?? '' } : {}),
+      profiles: draft.profiles.map((profile) => profile.id === activeProfile.id ? { ...profile, ...safePatch } : profile),
+    }
+  }
 
   const updateActiveProfile = (patch: Partial<ApiProfile>, commit = false) => {
-    const nextDraft = getDraftWithActiveProfilePatch(patch)
+    const safePatch = getApiKeyOnlyPatch(patch)
+    if (Object.keys(safePatch).length === 0) return
+    const nextDraft = getDraftWithActiveProfilePatch(safePatch)
     setDraft(nextDraft)
     if (commit) commitSettings(nextDraft)
   }
 
   const commitActiveProfilePatch = (patch: Partial<ApiProfile>) => {
-    const nextDraft = getDraftWithActiveProfilePatch(patch)
+    const safePatch = getApiKeyOnlyPatch(patch)
+    if (Object.keys(safePatch).length === 0) return
+    const nextDraft = getDraftWithActiveProfilePatch(safePatch)
     commitSettings(nextDraft)
   }
 
@@ -773,7 +786,7 @@ export default function SettingsModal() {
     setDuplicateProfileTooltipVisible(false)
     const profile: ApiProfile = {
       ...activeProfile,
-      id: newId(isOpenAIFamilyProvider(activeProfile.provider) ? 'openai' : 'profile'),
+      id: newId(activeProfile.provider === 'openai' ? 'openai' : 'profile'),
       name: `${activeProfile.name}（复制）`,
     }
     const nextDraft = normalizeSettings({
@@ -1458,6 +1471,67 @@ export default function SettingsModal() {
             
             {activeTab === 'api' && (
               <div className="space-y-4">
+                <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-100">文生图服务：{LOCKED_IMAGE_RELAY_PROFILE_NAME}本地异步中转站</div>
+                  <div className="mt-3 space-y-2 text-xs text-gray-500 dark:text-gray-400" data-selectable-text>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="shrink-0">接口地址</span>
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-white/[0.06] dark:text-gray-200">{FIXED_API_URL}</code>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="shrink-0">提交接口</span>
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-white/[0.06] dark:text-gray-200">POST /v1/images/generations/async</code>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="shrink-0">任务查询</span>
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-white/[0.06] dark:text-gray-200">GET /v1/images/tasks/{'{task_id}'}</code>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="shrink-0">模型</span>
+                      <code className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-white/[0.06] dark:text-gray-200">{FIXED_IMAGE_MODEL}</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="block">
+                  <span className="mb-1.5 block text-sm text-gray-600 dark:text-gray-300">API Key</span>
+                  <div className="relative">
+                    <input
+                      value={activeProfile.apiKey}
+                      onChange={(e) => updateActiveProfile({ apiKey: e.target.value })}
+                      onBlur={(e) => commitActiveProfilePatch({ apiKey: e.target.value })}
+                      type={showApiKey ? 'text' : 'password'}
+                      placeholder="sk-..."
+                      className="w-full rounded-xl border border-gray-200/70 bg-white/60 px-3 py-2.5 pr-10 text-sm text-gray-700 outline-none transition focus:border-blue-300 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-200 dark:focus:border-blue-500/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
+                      tabIndex={-1}
+                    >
+                      {showApiKey ? (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      ) : (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                          <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <div data-selectable-text className="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
+                    仅此项可配置；也支持通过 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">?apiKey=</code> 临时导入。
+                  </div>
+                </div>
+
+                {false && (
+                  <>
                 <div>
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <span className="block text-sm text-gray-600 dark:text-gray-300">当前配置</span>
@@ -1886,6 +1960,8 @@ export default function SettingsModal() {
                     当前版本在此弹窗中固定展示为 <code className="rounded bg-gray-100 px-1 py-0.5 dark:bg-white/[0.06]">{FIXED_TIMEOUT_SECONDS}</code> 秒，不支持修改。
                   </div>
                 </label>
+              )}
+                </>
               )}
             </div>
             )}

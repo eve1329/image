@@ -8,6 +8,8 @@ import { useDockerApiUrlMigrationNotice } from './hooks/useDockerApiUrlMigration
 import Header from './components/Header'
 import SearchBar from './components/SearchBar'
 import TaskGrid from './components/TaskGrid'
+import CanvasWorkspace from './components/CanvasWorkspace'
+import InfiniteCanvasEmbed from './components/InfiniteCanvasEmbed'
 import AgentWorkspace from './components/AgentWorkspace'
 import InputBar from './components/InputBar'
 import DetailModal from './components/DetailModal'
@@ -78,6 +80,15 @@ export default function App() {
       <Header />
       {appMode === 'agent' ? (
         <AgentWorkspace />
+      ) : appMode === 'infinite-canvas' ? (
+        <InfiniteCanvasEmbed />
+      ) : appMode === 'canvas' ? (
+        <main data-home-main data-drag-select-surface className="pb-48">
+          <div className="safe-area-x">
+            <SearchBar />
+            <CanvasWorkspace />
+          </div>
+        </main>
       ) : (
         <main data-home-main data-drag-select-surface className="pb-48">
           <div className="safe-area-x max-w-7xl mx-auto">
@@ -86,7 +97,7 @@ export default function App() {
           </div>
         </main>
       )}
-      <InputBar />
+      {appMode !== 'infinite-canvas' && <InputBar />}
       <DetailModal />
       <Lightbox />
       <SettingsModal />

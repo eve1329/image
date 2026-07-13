@@ -1,46 +1,7 @@
-import type { ApiMode, AppSettings } from '../types'
-import { normalizeBaseUrl } from './devProxy'
-import {
-  createDefaultOpenAIProfile,
-  DEFAULT_IMAGES_MODEL,
-  DEFAULT_RESPONSES_MODEL,
-  findEquivalentApiProfile,
-  mergeImportedSettings,
-  normalizeSettings,
-  normalizeStreamPartialImages,
-} from './apiProfiles'
+import type { AppSettings } from '../types'
+import { normalizeSettings } from './apiProfiles'
 
 const URL_SETTING_KEYS = ['settings', 'apiUrl', 'apiKey', 'codexCli', 'apiMode', 'model', 'profileName', 'streamImages', 'streamPartialImages']
-
-function getProfileDedupKey(profile: Pick<AppSettings['profiles'][number], 'provider' | 'baseUrl' | 'apiKey' | 'model' | 'apiMode' | 'codexCli' | 'streamImages' | 'streamPartialImages'>) {
-  return JSON.stringify([
-    profile.provider,
-    profile.baseUrl.trim().replace(/\/+$/, '').toLowerCase(),
-    profile.apiKey.trim(),
-    profile.model.trim(),
-    profile.apiMode,
-    profile.codexCli === true,
-    profile.streamImages === true,
-    profile.streamPartialImages ?? 0,
-  ])
-}
-
-function createUrlProfileId(usedIds: Set<string>) {
-  let id = `openai-url-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
-  while (usedIds.has(id)) {
-    id = `openai-url-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
-  }
-  return id
-}
-
-function pickUrlSettingsPayload(value: unknown): unknown | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  const record = value as Record<string, unknown>
-  return {
-    customProviders: record.customProviders,
-    profiles: record.profiles,
-  }
-}
 
 function getUrlSettingsPayload(searchParams: URLSearchParams): unknown | null {
   const raw = searchParams.get('settings')
@@ -48,31 +9,23 @@ function getUrlSettingsPayload(searchParams: URLSearchParams): unknown | null {
 
   try {
     const parsed = JSON.parse(raw)
-    if (parsed && typeof parsed === 'object' && 'settings' in parsed) {
-      return pickUrlSettingsPayload((parsed as { settings?: unknown }).settings ?? null)
-    }
-    return pickUrlSettingsPayload(parsed)
+    return parsed && typeof parsed === 'object' && 'settings' in parsed
+      ? (parsed as { settings?: unknown }).settings ?? null
+      : parsed
   } catch {
     return null
   }
 }
 
-function activateFirstImportedProfile(settings: AppSettings, importedSettings: unknown): AppSettings {
-  if (!importedSettings || typeof importedSettings !== 'object' || Array.isArray(importedSettings)) return settings
-
-  const record = importedSettings as Record<string, unknown>
-  if (!Array.isArray(record.profiles) || record.profiles.length === 0) return settings
-
-  const imported = normalizeSettings({
-    customProviders: record.customProviders,
-    profiles: record.profiles,
-  })
-  const importedProfile = imported.profiles[0]
-  const activeProfile = findEquivalentApiProfile(settings, importedProfile, imported.customProviders)
-
-  return activeProfile
-    ? normalizeSettings({ ...settings, activeProfileId: activeProfile.id })
-    : settings
+function getImportedApiKey(payload: unknown): string {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return ''
+  const record = payload as Record<string, unknown>
+  if (typeof record.apiKey === 'string') return record.apiKey.trim()
+  if (Array.isArray(record.profiles)) {
+    const profile = record.profiles.find((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item) && typeof (item as Record<string, unknown>).apiKey === 'string')
+    return typeof profile?.apiKey === 'string' ? profile.apiKey.trim() : ''
+  }
+  return ''
 }
 
 export function hasUrlSettingParams(searchParams: URLSearchParams) {
@@ -84,53 +37,6 @@ export function clearUrlSettingParams(searchParams: URLSearchParams) {
 }
 
 export function buildSettingsFromUrlParams(currentSettings: Partial<AppSettings> | unknown, searchParams: URLSearchParams): Partial<AppSettings> {
-  const importedSettings = getUrlSettingsPayload(searchParams)
-  const apiUrlParam = searchParams.get('apiUrl')
-  const apiKeyParam = searchParams.get('apiKey')
-  const codexCliParam = searchParams.get('codexCli')
-  const apiModeParam = searchParams.get('apiMode')
-  const modelParam = searchParams.get('model')
-  const profileNameParam = searchParams.get('profileName')
-  const profileName = profileNameParam?.trim() ?? ''
-  const streamImagesParam = searchParams.get('streamImages')
-  const streamPartialImagesParam = searchParams.get('streamPartialImages')
-  const apiMode: ApiMode | undefined = apiModeParam === 'images' || apiModeParam === 'responses' ? apiModeParam : undefined
-
-  const hasLegacyOpenAIParams = apiUrlParam !== null || apiKeyParam !== null || codexCliParam !== null || apiMode !== undefined || modelParam !== null || profileNameParam !== null || streamImagesParam !== null || streamPartialImagesParam !== null
-  const settings = importedSettings == null
-    ? normalizeSettings(currentSettings)
-    : activateFirstImportedProfile(mergeImportedSettings(currentSettings, importedSettings), importedSettings)
-
-  if (hasLegacyOpenAIParams) {
-    const profileApiMode = apiMode ?? 'images'
-    const profile = createDefaultOpenAIProfile({
-      id: createUrlProfileId(new Set(settings.profiles.map((item) => item.id))),
-      name: 'URL 参数配置',
-      apiMode: profileApiMode,
-      model: profileApiMode === 'responses' ? DEFAULT_RESPONSES_MODEL : DEFAULT_IMAGES_MODEL,
-    })
-    if (apiUrlParam !== null) profile.baseUrl = normalizeBaseUrl(apiUrlParam.trim())
-    if (apiKeyParam !== null) profile.apiKey = apiKeyParam.trim()
-    if (modelParam !== null && modelParam.trim()) profile.model = modelParam.trim()
-    if (profileName) profile.name = profileName
-    if (codexCliParam !== null) profile.codexCli = codexCliParam.trim().toLowerCase() === 'true'
-    if (streamImagesParam !== null) profile.streamImages = streamImagesParam.trim().toLowerCase() === 'true'
-    if (streamPartialImagesParam !== null) profile.streamPartialImages = normalizeStreamPartialImages(streamPartialImagesParam)
-
-    const existingProfile = settings.profiles.find((item) =>
-      getProfileDedupKey(item) === getProfileDedupKey(profile) &&
-      (!profileName || item.name.trim() === profileName)
-    )
-    if (existingProfile) {
-      return normalizeSettings({ ...settings, activeProfileId: existingProfile.id })
-    }
-
-    return normalizeSettings({
-      ...settings,
-      profiles: [...settings.profiles, profile],
-      activeProfileId: profile.id,
-    })
-  }
-
-  return importedSettings == null ? {} : settings
+  const apiKey = searchParams.get('apiKey')?.trim() || getImportedApiKey(getUrlSettingsPayload(searchParams))
+  return apiKey ? normalizeSettings({ ...normalizeSettings(currentSettings), apiKey }) : {}
 }

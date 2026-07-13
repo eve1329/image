@@ -6,3 +6,4 @@ dev-proxy.config.json
 !.agents/skills/
 !.agents/skills/**
 .playwright-cli/
+.DS_Store

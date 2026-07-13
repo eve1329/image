@@ -105,6 +105,24 @@ export function RefreshIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function ZoomOutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l5 5m-3-8a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h4" />
+    </svg>
+  )
+}
+
+export function ZoomInIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l5 5m-3-8a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h4m-2-2v4" />
+    </svg>
+  )
+}
+
 export function CodeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}>
@@ -216,4 +234,3 @@ export function TransparentBgIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-

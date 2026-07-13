@@ -1,7 +1,8 @@
 // ===== 设置 =====
 
 export type ApiMode = 'images' | 'responses'
-export type AppMode = 'gallery' | 'agent'
+export type AppMode = 'gallery' | 'agent' | 'canvas' | 'infinite-canvas'
+export type MediaType = 'image' | 'video'
 export type ReferenceImageEditAction = 'ask' | 'replace-reference' | 'add-mask'
 export const ZIP_DOWNLOAD_ROUTE_VALUES = [
   'task-selection',
@@ -15,7 +16,7 @@ export type ZipDownloadRoute = typeof ZIP_DOWNLOAD_ROUTE_VALUES[number]
 export const DEFAULT_ZIP_DOWNLOAD_ROUTES: ZipDownloadRoute[] = ['task-selection', 'favorite-collection-selection']
 export type BuiltInApiProvider = 'openai' | 'fal' | 'openai-deployment-async'
 export type ApiProvider = BuiltInApiProvider | string
-export type CustomProviderTemplate = 'http-image'
+export type CustomProviderTemplate = 'http-image' | 'http-video'
 export const DEFAULT_STREAM_PARTIAL_IMAGES = 1
 export const DEFAULT_AGENT_MAX_TOOL_ROUNDS = 15
 
@@ -32,6 +33,7 @@ export interface CustomProviderFileMapping {
 export interface CustomProviderResultMapping {
   imageUrlPaths?: string[]
   b64JsonPaths?: string[]
+  videoUrlPaths?: string[]
 }
 
 export interface CustomProviderSubmitMapping {
@@ -227,6 +229,14 @@ export interface TaskRecord {
   agentBatchCallId?: string
   /** Agent 图像工具实际动作 */
   agentToolAction?: 'generate' | 'edit' | 'auto' | string
+  /** 媒体类型：图片或视频，默认为 'image' */
+  mediaType?: MediaType
+  /** 视频原始 URL（用于重新下载） */
+  videoUrl?: string
+  /** 视频时长（秒） */
+  videoDuration?: number
+  /** 视频宽高比 */
+  videoAspectRatio?: string
 }
 
 export interface FavoriteCollection {

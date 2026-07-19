@@ -1,6 +1,6 @@
 # `/image` 同机蓝绿部署 Runbook
 
-本文档用于把当前仓库构建出的静态 SPA 容器部署到现有 API 主站所在服务器，并通过主站的 `/image/` 子路径对外提供服务。本文以 `newapi-16` + `https://artworkers.top/image/` 为默认示例，但所有关键参数都可以覆盖，不再假定只能部署到单一域名。
+本文档用于把当前仓库构建出的静态 SPA 容器部署到现有 API 主站所在服务器，并通过主站的 `/image/` 子路径对外提供服务。本文以 `newapi-16` + `https://artworkers.online/image/` 为默认示例，但所有关键参数都可以覆盖，不再假定只能部署到单一域名。
 
 ## 目标形态
 
@@ -9,8 +9,8 @@
 - 本项目以静态站点容器运行，通过主机回环端口挂到现有站点子路径：
   - `image-blue` -> `127.0.0.1:3200`
   - `image-green-amd64` -> `127.0.0.1:3201`
-- 默认示例公网入口为 `https://artworkers.top/image/`。
-- 默认示例前端 API URL 为 `https://artworkers.top/v1`。
+- 默认示例公网入口为 `https://artworkers.online/image/`。
+- 默认示例前端 API URL 为 `https://artworkers.online/v1`。
 - Docker 内置 `/api-proxy/` 在这条部署路径上保持关闭：
   - `ENABLE_API_PROXY=false`
   - `LOCK_API_PROXY=false`
@@ -38,10 +38,10 @@
 ```text
 remote alias   = newapi-16
 remote env     = /root/image/deploy/bluegreen-host.env
-nginx site     = /etc/nginx/sites-enabled/artworkers.top
+nginx site     = /etc/nginx/sites-enabled/artworkers.online
 nginx snippet  = /etc/nginx/snippets/gpt-image-playground-image.conf
-public url     = https://artworkers.top/image/
-default api    = https://artworkers.top/v1
+public url     = https://artworkers.online/image/
+default api    = https://artworkers.online/v1
 ```
 
 如果目标不是这个默认示例，优先显式传参，不要去改脚本源码。
@@ -73,7 +73,7 @@ BLUE_CONTAINER=image-blue
 GREEN_CONTAINER=image-green-amd64
 BLUE_PORT=3200
 GREEN_PORT=3201
-DEFAULT_API_URL=https://artworkers.top/v1
+DEFAULT_API_URL=https://artworkers.online/v1
 ENABLE_API_PROXY=false
 LOCK_API_PROXY=false
 HOST=0.0.0.0
@@ -102,14 +102,14 @@ scp deploy/nginx.image-snippet.conf.example newapi-16:/etc/nginx/snippets/gpt-im
 include /etc/nginx/snippets/gpt-image-playground-image.conf;
 ```
 
-以 `artworkers.top` 为例，推荐使用下面的幂等化命令插入：
+以 `artworkers.online` 为例，推荐使用下面的幂等化命令插入：
 
 ```bash
 ssh newapi-16 "python3 - <<'PY'
 from pathlib import Path
 import re
 
-site = Path('/etc/nginx/sites-enabled/artworkers.top')
+site = Path('/etc/nginx/sites-enabled/artworkers.online')
 snippet = '    include /etc/nginx/snippets/gpt-image-playground-image.conf;'
 text = site.read_text()
 if snippet not in text:
@@ -230,16 +230,16 @@ curl -fsS http://127.0.0.1:3201/sw.js
 ## 公网验证
 
 ```bash
-curl -I https://artworkers.top/image/
-curl -fsS https://artworkers.top/image/ | grep -i "GPT Image Playground"
-curl -i https://artworkers.top/v1/models
+curl -I https://artworkers.online/image/
+curl -fsS https://artworkers.online/image/ | grep -i "GPT Image Playground"
+curl -i https://artworkers.online/v1/models
 ```
 
 浏览器验证项：
 
-- 打开 `https://artworkers.top/image/`。
+- 打开 `https://artworkers.online/image/`。
 - 确认静态资源来自 `/image/assets/...`。
-- 确认默认 API URL 为 `https://artworkers.top/v1`。
+- 确认默认 API URL 为 `https://artworkers.online/v1`。
 - 确认网络请求走 `/v1/...`，而不是 `/image/api-proxy/...`。
 - 用可用测试 key 至少验证一次 `GET /v1/models` 或最小生图请求。
 
@@ -260,8 +260,8 @@ ssh newapi-16 "sed -i.bak 's#proxy_pass http://127.0.0.1:3200/#proxy_pass http:/
 回滚后重新验证：
 
 ```bash
-curl -I https://artworkers.top/image/
-curl -fsS https://artworkers.top/image/ | grep -i "GPT Image Playground"
+curl -I https://artworkers.online/image/
+curl -fsS https://artworkers.online/image/ | grep -i "GPT Image Playground"
 ```
 
 ## 只换镜像 tag，不改站点结构

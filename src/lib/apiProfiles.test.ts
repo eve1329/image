@@ -22,10 +22,10 @@ afterEach(() => {
 })
 
 describe('DEFAULT_SETTINGS', () => {
-  it('uses artworkers.top for the built-in video profile', () => {
+  it('uses artworkers.online for the built-in video profile', () => {
     expect(DEFAULT_SETTINGS.profiles[0]).toMatchObject({
       id: 'video-ds-2.0-profile',
-      baseUrl: 'https://artworkers.top',
+      baseUrl: 'https://artworkers.online',
     })
   })
 })

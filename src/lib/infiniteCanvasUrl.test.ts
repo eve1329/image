@@ -6,7 +6,7 @@ describe('buildInfiniteCanvasUrl', () => {
   it('does not add the active API profile credentials to the canvas URL', () => {
     const profile = createDefaultOpenAIProfile({
       id: 'openai-a',
-      baseUrl: 'https://artworkers.top/v1',
+      baseUrl: 'https://artworkers.online/v1',
       apiKey: 'secret-key',
     })
     const settings = normalizeSettings({

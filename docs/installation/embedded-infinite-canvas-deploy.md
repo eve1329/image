@@ -114,7 +114,7 @@ git submodule update --init --recursive
 ```bash
 cd vendor/infinite-canvas
 docker build \
-  --build-arg NEXT_PUBLIC_DOC_URL=https://artworkers.top/image/manual/index.html \
+  --build-arg NEXT_PUBLIC_DOC_URL=https://artworkers.online/image/manual/index.html \
   -t infinite-canvas:latest \
   .
 docker run -d \
@@ -133,7 +133,7 @@ http://127.0.0.1:3002/canvas
 `NEXT_PUBLIC_DOC_URL` 会在 Next.js 构建阶段写入书本按钮。它不能在容器启动后再通过 `docker run -e` 修改。主站教程随 Vite 静态产物部署，当前正式地址为：
 
 ```text
-https://artworkers.top/image/manual/index.html
+https://artworkers.online/image/manual/index.html
 ```
 
 生产环境建议用 Nginx 或网关反代成 HTTPS，例如：
@@ -161,10 +161,10 @@ VITE_INFINITE_CANVAS_URL=https://canvas.example.com/canvas npm run build
 如果使用项目里的 `deploy/Dockerfile`，镜像会保留画布地址占位符，并在容器启动时读取 `INFINITE_CANVAS_URL`。例如：
 
 ```bash
-docker run -e INFINITE_CANVAS_URL=https://artworkers.top/canvas/canvas ...
+docker run -e INFINITE_CANVAS_URL=https://artworkers.online/canvas/canvas ...
 ```
 
-蓝绿部署脚本会从远端 `bluegreen-host.env` 读取该变量；未设置时默认使用 `https://artworkers.top/canvas/canvas`。
+蓝绿部署脚本会从远端 `bluegreen-host.env` 读取该变量；未设置时默认使用 `https://artworkers.online/canvas/canvas`。
 
 ### 4. Nginx 反代示例
 

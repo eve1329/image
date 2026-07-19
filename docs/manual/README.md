@@ -11,6 +11,6 @@ npm run build:manual
 生成结果为 `public/manual/index.html`，执行 `npm run build` 时会自动重新生成，并复制到 `dist/manual/`。
 
 - 本地地址：`http://localhost:5173/manual/index.html`
-- 生产地址：`https://artworkers.top/image/manual/index.html`
+- 生产地址：`https://artworkers.online/image/manual/index.html`
 
 如果生产域名或路径发生变化，需要同步修改画布镜像构建时的 `NEXT_PUBLIC_DOC_URL`。

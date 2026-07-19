@@ -24,14 +24,14 @@ Reference docs live here:
 - Git remote (SSH): `git@github.com:eve1329/image.git`
 - Remote SSH alias: `newapi-16`
 - Remote env file: `/root/image/deploy/bluegreen-host.env`
-- Public URL: `https://artworkers.top/image/`
-- Nginx site: `/etc/nginx/sites-enabled/artworkers.top`
+- Public URL: `https://artworkers.online/image/`
+- Nginx site: `/etc/nginx/sites-enabled/artworkers.online`
 - Nginx snippet: `/etc/nginx/snippets/gpt-image-playground-image.conf`
 - Blue: `image-blue`, port `3200`
 - Green: `image-green-amd64`, port `3201`
 - Build policy: build locally as `linux/amd64`; do not rebuild from source on the remote host
 - Runtime contract:
-  - `DEFAULT_API_URL=https://artworkers.top/v1`
+  - `DEFAULT_API_URL=https://artworkers.online/v1`
   - `ENABLE_API_PROXY=false`
   - `LOCK_API_PROXY=false`
 
@@ -104,8 +104,8 @@ ssh newapi-16 'for p in 3200 3201; do printf "%s " "$p"; curl -fsS --max-time 5 
 5. After deploy, verify:
 
 ```bash
-curl -I https://artworkers.top/image/
-curl -fsS https://artworkers.top/image/ | grep -i "GPT Image Playground"
+curl -I https://artworkers.online/image/
+curl -fsS https://artworkers.online/image/ | grep -i "GPT Image Playground"
 ```
 
 ## Rollback

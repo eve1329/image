@@ -75,7 +75,7 @@
 
 ### 预设配置
 - ✅ Provider: video-ds-2.0
-- ✅ Base URL: https://artworkers.top
+- ✅ Base URL: https://artworkers.online
 - ✅ Model: video-ds-2.0-fast
 - ✅ 时长: 15秒
 - ✅ 宽高比: 9:16
@@ -98,7 +98,7 @@ JSON.parse(localStorage.getItem('gpt-image-playground-settings')).profiles.filte
   id: "video-ds-2.0-profile",
   name: "视频生成 DS 2.0",
   provider: "video-ds-2.0",
-  baseUrl: "https://artworkers.top",
+  baseUrl: "https://artworkers.online",
   ...
 }]
 ```

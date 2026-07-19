@@ -5,7 +5,7 @@ import { callImageApi } from './api'
 
 async function loadDeploymentApiModules() {
   vi.resetModules()
-  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://artworkers.top/v1')
+  vi.stubEnv('VITE_DEFAULT_API_URL', 'https://artworkers.online/v1')
   const apiProfiles = await import('./apiProfiles')
   const api = await import('./api')
   return { ...apiProfiles, ...api }
@@ -1049,8 +1049,8 @@ describe('callImageApi', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledTimes(3)
-    expect(fetchMock.mock.calls[0][0]).toBe('https://artworkers.top/v1/images/generations/async')
-    expect(fetchMock.mock.calls[1][0]).toBe('https://artworkers.top/v1/images/tasks/task-1')
+    expect(fetchMock.mock.calls[0][0]).toBe('https://artworkers.online/v1/images/generations/async')
+    expect(fetchMock.mock.calls[1][0]).toBe('https://artworkers.online/v1/images/tasks/task-1')
     expect(fetchMock.mock.calls[2][0]).toBe('/v1/images/tasks/task-1/content/0')
     expect(fetchMock.mock.calls[2][1]).toMatchObject({
       headers: {
@@ -1084,9 +1084,9 @@ describe('callImageApi', () => {
     })
 
     const calledUrls = fetchMock.mock.calls.map((call) => String(call[0]))
-    expect(calledUrls).toContain('https://artworkers.top/v1/images/edits')
-    expect(calledUrls).not.toContain('https://artworkers.top/v1/images/generations/async')
-    expect(calledUrls).not.toContain('https://artworkers.top/v1/images/tasks/task-1')
+    expect(calledUrls).toContain('https://artworkers.online/v1/images/edits')
+    expect(calledUrls).not.toContain('https://artworkers.online/v1/images/generations/async')
+    expect(calledUrls).not.toContain('https://artworkers.online/v1/images/tasks/task-1')
   })
 
   it('does not send Authorization when downloading third-party image URLs from Images API responses', async () => {

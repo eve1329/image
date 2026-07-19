@@ -129,7 +129,7 @@ Application
 │                                      │
 │ Base URL:                            │
 │ ┌──────────────────────────────┐    │
-│ │ https://artworkers.top          │    │ ✅ 已预设
+│ │ https://artworkers.online          │    │ ✅ 已预设
 │ └──────────────────────────────┘    │
 │                                      │
 │ API Key:                             │
@@ -233,7 +233,7 @@ Application
 - ✅ 标签显示 [http-video]
 
 ### 在配置详情中
-- ✅ Base URL 已填写：https://artworkers.top
+- ✅ Base URL 已填写：https://artworkers.online
 - ✅ Model 已填写：video-ds-2.0-fast
 - ✅ Provider 显示：video-ds-2.0
 

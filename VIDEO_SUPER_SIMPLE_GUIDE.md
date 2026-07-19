@@ -24,7 +24,7 @@
 │  │  视频生成 DS 2.0  [http-video]  ▼│   │ ← 选择这个
 │  └──────────────────────────────────┘   │
 │                                          │
-│  Base URL: https://artworkers.top          │ ← 已预设✅
+│  Base URL: https://artworkers.online          │ ← 已预设✅
 │  API Key:  ┌──────────────────────┐     │
 │            │ sk-xxxxxxxxxxxxxxxx  │     │ ← 填这里
 │            └──────────────────────┘     │

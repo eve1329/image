@@ -298,8 +298,8 @@ bash scripts/deploy/bluegreen-host.sh
 
 这条部署路径的默认示例与固定约束是：
 
-- 默认公网入口为 `https://artworkers.top/image/`
-- 默认 API URL 为 `https://artworkers.top/v1`
+- 默认公网入口为 `https://artworkers.online/image/`
+- 默认 API URL 为 `https://artworkers.online/v1`
 - 容器环境固定关闭 `/api-proxy/`
 - 蓝绿容器通过 `127.0.0.1:3200` / `127.0.0.1:3201` 接入主机 Nginx snippet
 - 远端 SSH alias、Nginx site、Public URL 都可以通过脚本参数或 `BLUEGREEN_*` 环境变量覆盖

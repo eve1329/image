@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gpt-image-playground-v0.1.6'
+const CACHE_NAME = 'gpt-image-playground-v0.1.7'
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './pwa-icon.svg']
 const BYPASS_CACHE_PREFIXES = ['/v1/', '/api/']
 
@@ -34,30 +34,20 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy))
-          return response
-        })
-        .catch(() => caches.match('./index.html')),
-    )
-    return
-  }
-
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached
-
-      return fetch(request).then((response) => {
+    fetch(request)
+      .then((response) => {
         if (response.ok) {
           const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+          caches.open(CACHE_NAME).then((cache) => {
+            if (request.mode === 'navigate') {
+              return cache.put('./index.html', copy)
+            }
+            return cache.put(request, copy)
+          })
         }
         return response
       })
-    }),
+      .catch(() => caches.match(request).then((cached) => cached || (request.mode === 'navigate' ? caches.match('./index.html') : undefined))),
   )
 })

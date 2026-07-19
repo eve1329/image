@@ -74,4 +74,30 @@ describe('service worker fetch policy', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1)
     expect(await response!.json()).toEqual({ data: { status: 'SUCCESS' } })
   })
+
+  it('prefers the network for static assets so a deployment cannot leave the page on an old bundle', async () => {
+    const cachedOldBundle = new Response('old bundle')
+    const networkBundle = new Response('new bundle')
+    const fetchImpl = vi.fn(async () => networkBundle)
+    const cache = { put: vi.fn(async () => undefined) }
+    const cachesImpl = {
+      open: vi.fn(async () => cache),
+      keys: vi.fn(async () => []),
+      delete: vi.fn(async () => true),
+      match: vi.fn(async () => cachedOldBundle),
+    } as unknown as CacheStorage
+    const fetchHandler = loadFetchHandler({ fetchImpl, cachesImpl })
+
+    let responsePromise: Promise<Response> | undefined
+    fetchHandler({
+      request: new Request('https://artworkers.online/image/assets/index-current.js'),
+      respondWith: (promise: Promise<Response>) => {
+        responsePromise = promise
+      },
+    })
+
+    const response = await responsePromise
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(await response!.text()).toBe('new bundle')
+  })
 })
